@@ -60,6 +60,7 @@ public class AmsAcceptanceArchivesController extends BaseController {
 	public String form(AmsAcceptanceArchives amsAcceptanceArchives, Model model) {
 		model.addAttribute("amsAcceptanceArchives", amsAcceptanceArchives);
 		return "modules/ams/amsAcceptanceArchivesForm";
+
 	}
 
 	@RequiresPermissions("ams:amsAcceptanceArchives:edit")
