@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xmlns:context="http://www.springframework.org/schema/context" 
+xmlns:mongo="http://www.springframework.org/schema/data/mongo" 
+xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd 
+http://www.springframework.org/schema/data/repository http://www.springframework.org/schema/data/repository/spring-repository-1.8.xsd
+http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.8.xsd 
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+	
+	
+	<!-- 需要密码验证的配置方式 -->
+	<mongo:mongo-client id="mongo" host="${mongo.host}" port="${mongo.port}" credentials="${mongo.username}:${mongo.password}@${mongo.dbname}" >
+	 <mongo:client-options
+        	write-concern="SAFE"
+            connections-per-host="${mongo.connectionsPerHost}"
+            threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
+            connect-timeout="${mongo.connectTimeout}"
+            max-wait-time="${mongo.maxWaitTime}"
+            socket-keep-alive="${mongo.socketKeepAlive}"
+            heartbeat-socket-timeout="100000"
+            socket-timeout="${mongo.socketTimeout}"/>
+	</mongo:mongo-client>
+	<!-- 不需要密码验证的配置方式 -->
+    <!-- <mongo:mongo-client id="mongo"  host="${mongo.host}" port="${mongo.port}">
+        <mongo:client-options
+        	write-concern="NORMAL"
+            connections-per-host="${mongo.connectionsPerHost}"
+            threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
+            connect-timeout="${mongo.connectTimeout}"
+            max-wait-time="${mongo.maxWaitTime}"
+            socket-keep-alive="${mongo.socketKeepAlive}"
+            heartbeat-socket-timeout="100000"
+            socket-timeout="${mongo.socketTimeout}"/>
+    </mongo:mongo-client> -->
+
+    <!-- mongo的工厂，通过它来取得mongo实例,dbname为mongodb的数据库名，没有的话会自动创建 -->
+    <mongo:db-factory id="mongoDbFactory" dbname="${mongo.dbname}" mongo-ref="mongo"/>
+
+    <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+        <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
+    </bean>
+
+    <!-- mongodb bean的仓库目录，会自动扫描扩展了MongoRepository接口的接口进行注入 --> 
+    <!-- <mongo:repositories base-package="com.ucams.modules.mongo.*" /> -->
+</beans>

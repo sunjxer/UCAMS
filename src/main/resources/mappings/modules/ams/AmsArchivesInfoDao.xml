@@ -1,0 +1,714 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsArchivesInfoDao">
+    
+	<sql id="amsArchivesInfoColumns">
+		a.id AS "id",
+		a.project_id AS "projectId",
+		a.unit_project_id AS "unitProjectId",
+		a.archives_code AS "archivesCode",
+		a.archives_name AS "archivesName",
+		a.make_unit AS "makeUnit",
+		a.carrier_type AS "carrierType",
+		a.files_count AS "filesCount",
+		a.start_date AS "startDate",
+		a.end_date AS "endDate",
+		a.author AS "author",
+		a.make_date AS "makeDate",
+		a.auditor AS "auditor",
+		a.audit_date AS "auditDate",
+		a.storage_period AS "storagePeriod",
+		a.degree_secrets AS "degreeSecrets",
+		a.main_title AS "mainTitle",
+		a.archives_explain AS "archivesExplain",
+		a.archives_json AS "archivesJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5",
+		a.catalog_type AS "catalogType"
+	</sql>
+	
+	<sql id="amsArchivesInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>
+		FROM ams_archives_info a
+		<include refid="amsArchivesInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>,b.status AS "amsAcceptance.status"
+		FROM ams_archives_info a LEFT JOIN
+			(SELECT c.id as cid, c.project_id,c.unit_project_id AS unit_project_id,c.archive_id AS archive_id,d.id AS bid,d.status 
+			from ams_acceptance_archives c RIGHT  JOIN ams_acceptance d ON c.acceptance_id=d.id where 1=1 
+			<if test="unitProjectId != null and unitProjectId != '' and unitProjectId != '-1'">
+					AND c.unit_project_id =#{unitProjectId}
+			</if>
+			<if test="projectId != null and projectId != ''">
+					AND c.project_id =#{projectId} and c.unit_Project_Id='-1'
+			</if>
+			AND d.status in(1,2,3)) as b
+			<if test="unitProjectId != null and unitProjectId != ''  and unitProjectId != '-1'">
+					ON a.unit_project_id=b.unit_project_id
+			</if>
+			<if test="projectId != null and projectId != ''">
+					ON a.id=b.archive_id
+			</if>
+			
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="unitProjectId != null and unitProjectId != ''">
+				AND a.unit_Project_Id =#{unitProjectId}
+			</if>
+			<if test="projectId != null and projectId != ''">
+				AND a.project_id =#{projectId} and a.unit_Project_Id='-1'
+			</if>
+			<if test="archivesName != null and archivesName != ''">
+				AND a.archives_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{archivesName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{archivesName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{archivesName},'%')</if>
+			</if>
+			<if test="ids != null and ids != ''  and (exten1=='not in')">
+				<if test="exten1=='not in'">AND a.id  not in </if>
+				<foreach item="iem" index="index" collection="ids" open="(" separator="," close=")">  
+ 				 #{iem}  
+ 				</foreach>  
+					
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>
+		FROM ams_archives_info a
+		<include refid="amsArchivesInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_archives_info(
+			id,
+			project_id,
+			unit_project_id,
+			archives_code,
+			archives_name,
+			make_unit,
+			carrier_type,
+			files_count,
+			start_date,
+			end_date,
+			author,
+			make_date,
+			auditor,
+			audit_date,
+			storage_period,
+			degree_secrets,
+			main_title,
+			archives_explain,
+			archives_json,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5,
+			catalog_type
+		) VALUES (
+			#{id},
+			#{projectId},
+			<if test="unitProjectId != null and unitProjectId != ''">
+				#{unitProjectId},
+			</if>
+			<if test="unitProjectId == ''">
+				-1,
+			</if>
+			#{archivesCode},
+			#{archivesName},
+			#{makeUnit},
+			#{carrierType},
+			#{filesCount},
+			#{startDate},
+			#{endDate},
+			#{author},
+			#{makeDate},
+			#{auditor},
+			#{auditDate},
+			#{storagePeriod},
+			#{degreeSecrets},
+			#{mainTitle},
+			#{archivesExplain},
+			#{archivesJson},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5},
+			#{catalogType}
+		)
+	</insert>
+	
+	<insert id="addFile">
+		INSERT INTO ams_archives_files(
+			id,
+			group_id,
+			record_id,
+			start_page,
+			end_page,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5,
+			sort,
+			genre_id
+		) VALUES (
+			#{id},
+			#{groupId},
+			#{recordId},
+			#{startPage},
+			#{endPage},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5},
+			#{sort},
+			#{genreId}
+		)
+	</insert>
+	
+	<select id="findCountByGroupId" resultType="Integer">
+		select count(*) from ams_archives_files where group_id=#{groupId} and del_flag=0
+	</select>
+	
+	<sql id="amsArchivesFilesColumns">
+		a.id AS "id",
+		a.group_id AS "groupId",
+		a.record_id AS "recordId",
+		a.start_page AS "startPage",
+		a.end_page AS "endPage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5",
+		a.genre_id AS "genreId"
+	</sql>
+	<sql id="amsArchivesFilesJoins">
+	</sql>
+	<select id="findArchivesFilesList" resultType="AmsArchivesFiles">
+		SELECT 
+			<include refid="amsArchivesFilesColumns"/>
+		FROM ams_archives_files a
+		<include refid="amsArchivesFilesJoins"/>
+		<where>
+			a.del_flag = 0
+		</where>	
+		<if test="groupId != null and groupId != ''">
+				AND group_id=#{groupId} 
+		</if>
+		ORDER BY a.sort DESC	
+	</select>
+	
+	<select id="findArchivesFilesListByGerne" resultType="AmsArchivesFiles">
+		SELECT 
+			<include refid="amsArchivesFilesColumns"/>
+		FROM ams_archives_files a
+		<include refid="amsArchivesFilesJoins"/>
+		<where>
+			a.del_flag = 0
+		</where>	
+		<if test="groupId != null and groupId != ''">
+				AND group_id=#{groupId} 
+		</if>
+		<if test="genreId != null and genreId != ''">
+				AND genre_id=#{genreId} 
+		</if>
+		ORDER BY a.sort DESC
+	</select>
+	
+	<select id="findArchivesFilesListBySort" resultType="AmsArchivesFiles">
+		SELECT 
+			<include refid="amsArchivesFilesColumns"/>
+		FROM ams_archives_files a
+		<include refid="amsArchivesFilesJoins"/>
+		<where>
+			a.del_flag = 0
+		</where>	
+		<if test="groupId != null and groupId != ''">
+				AND group_id=#{groupId} 
+		</if>
+		AND a.sort>=#{sort} ORDER BY a.sort ASC
+	</select>
+	
+	<update id="updateSort">
+		UPDATE ams_archives_files AS archA 
+		JOIN ams_archives_files AS archB ON (archA.id=#{thisId} 
+		AND archB.id = #{changeId})
+		OR(archA.id = #{thisId} AND archB.id=#{changeId})
+		SET archA.sort = archB.sort,archB.sort=archA.sort,
+		archA.start_page = #{thisStartPage},archA.end_page = #{thisEndPage},
+		archB.start_page = #{changeStartPage},archB.end_page = #{changeEndPage};
+	</update>
+	<update id="updateSorts">
+		UPDATE ams_archives_files set
+		sort=#{sort},
+		start_page=#{startPage},
+		end_page=#{endPage}
+		where id=#{id}
+	</update>
+	
+	<update id="update">
+		UPDATE ams_archives_info SET 	
+			archives_code = #{archivesCode},
+			archives_name = #{archivesName},
+			make_unit = #{makeUnit},
+			carrier_type = #{carrierType},
+			files_count = #{filesCount},
+			start_date = #{startDate},
+			end_date = #{endDate},
+			author = #{author},
+			make_date = #{makeDate},
+			auditor = #{auditor},
+			audit_date = #{auditDate},
+			storage_period = #{storagePeriod},
+			degree_secrets = #{degreeSecrets},
+			main_title = #{mainTitle},
+			archives_explain = #{archivesExplain},
+			archives_json = #{archivesJson},
+			remarks = #{remarks},
+			exten1 = #{exten1},
+			exten2 = #{exten2},
+			exten3 = #{exten3},
+			exten4 = #{exten4},
+			exten5 = #{exten5}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_archives_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteFile">
+		UPDATE ams_archives_files SET 
+			del_flag = 1
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateAmsArchivesFiles" >
+		  
+                UPDATE ams_archives_files    
+                <set>  
+                  start_page = #{startPage},
+                  end_page = #{endPage},
+                  sort = #{sort}  
+                </set>  
+                WHERE id = #{id}  
+         
+	</update>
+	
+	<select id="getAmsArchivesFiles" resultType="AmsArchivesFiles">
+		SELECT 
+			<include refid="amsArchivesFilesColumns"/>
+		FROM ams_archives_files a
+		<include refid="amsArchivesFilesJoins"/>
+		<where>
+			a.del_flag = 0
+		</where>	
+			AND id = #{id}		
+	</select>
+	
+		<sql id="amsProjectInfoColumns">
+		a.id AS "id",
+		a.proc_ins_id AS "procInsId",
+		a.construction_id AS "constructionId",
+		a.project_type AS "projectType",
+		a.project_no AS "projectNo",
+		a.project_name AS "projectName",
+		a.local AS "local",
+		a.address AS "address",
+		a.project_approval_unit AS "projectApprovalUnit",
+		a.design_unit AS "designUnit",
+		a.prospecting_unit AS "prospectingUnit",
+		a.supervision_unit AS "supervisionUnit",
+		a.approval_number AS "approvalNumber",
+		a.approval_url AS "approvalUrl",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.planning_license_url AS "planningLicenseUrl",
+		a.land_license_number AS "landLicenseNumber",
+		a.land_license_url AS "landLicenseUrl",
+		a.land_permit_number AS "landPermitNumber",
+		a.land_permit_url AS "landPermitUrl",
+		a.start_date AS "startDate",
+		a.finish_date AS "finishDate",
+		a.land_leasing_period AS "landLeasingPeriod",
+		a.description_json AS "descriptionJson",
+		a.business_man AS "businessMan",
+		a.check_status AS "checkStatus",
+		a.opinion AS "opinion",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+		<sql id="amsProjectInfoJoins">
+	</sql>
+	
+	<select id="findProjectList" resultType="AmsProjectInfo">
+		SELECT 
+			<include refid="amsProjectInfoColumns"/>
+		FROM ams_project_info a
+		<include refid="amsProjectInfoJoins"/>
+		<where>
+			a.del_flag = 0 
+			<if test="ids != null and ids != ''">
+			and a.id in 
+			 <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">  
+ 			 #{item}
+ 			 </foreach> 
+			</if>  
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<sql id="amsUnitProInfoColumns">
+		a.id AS "id",
+		a.project_id AS "projectId",
+		a.unit_project_no AS "unitProjectNo",
+		a.unit_project_name AS "unitProjectName",
+		a.unit_project_address AS "unitProjectAddress",
+		a.unit_project_type AS "unitProjectType",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.construction_permit_number AS "constructionPermitNumber",
+		a.start_date AS "startDate",
+		a.finish_date AS "finishDate",
+		a.design_unit AS "designUnit",
+		a.exploration_unit AS "explorationUnit",
+		a.contractor AS "contractor",
+		a.supervision_unit AS "supervisionUnit",
+		a.abscissa AS "abscissa",
+		a.ordinate AS "ordinate",
+		a.specialty_json AS "specialtyJson",
+		a.transfre_id AS "transfreId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	<sql id="amsUnitProInfoJoins">
+	</sql>
+	<select id="findUnitProjectList" resultType="AmsUnitProInfo">
+		SELECT 
+			<include refid="amsUnitProInfoColumns"/>
+		FROM ams_unit_pro_info a
+		<include refid="amsUnitProInfoJoins"/>
+		<where>
+			a.del_flag = 0
+			<if test="projectId != null and projectId != ''">
+			and a.project_Id=#{projectId}
+			</if>
+			<!-- <if test="ids != null and ids != ''">
+			and a.id in 
+			 <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">  
+ 			 #{item}  
+ 			</foreach> 
+			</if> -->
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${amsUnitProInfo.page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findArchListByProId" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>
+		FROM ams_archives_info a
+		<include refid="amsArchivesInfoJoins"/>
+		<where>
+			a.del_flag = 0
+			AND a.project_id IN 
+			<foreach item="item" index="index" collection="list" open="(" close=")"  separator=",">  
+ 				 #{item}  
+			</foreach>
+		</where>
+	</select>
+	
+	<sql id="amsFileInfoColumns">
+		a.id AS "id",
+		a.unit_project_id AS "unitProjectId",
+		a.project_id AS "projectId",
+		a.group_id AS "groupId",
+		a.file_name AS "fileName",
+		a.file_no AS "fileNo",
+		a.author AS "author",
+		a.form_date AS "formDate",
+		a.filecount AS "filecount",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.filesource AS "filesource",
+		a.dongle AS "dongle",
+		a.state AS "state",
+		a.file_json AS "fileJson",
+		a.structure_json AS "structureJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"				
+	</sql>
+	<sql id="amsFileInfoJoins">
+	right JOIN ams_archives_files b ON a.id=b.record_id	
+	LEFT JOIN ams_genre c ON b.genre_id = c.id
+	</sql>
+	<select id="findAmsFileInfoInList" resultType="AmsFileInfo">
+		SELECT 
+			<include refid="amsFileInfoColumns"/>
+		,b.id AS "amsArchivesFiles.id" ,b.sort as "amsArchivesFiles.sort",b.start_page as "amsArchivesFiles.startPage",b.end_page as "amsArchivesFiles.endPage",b.genre_id as "amsArchivesFiles.genreId"
+		,c.id AS "amsGenre.id",c.name AS "amsGenre.name",c.code AS "amsGenre.code" 
+		FROM ams_file_info a
+		<include refid="amsFileInfoJoins"/>
+		<where>
+			a.del_flag = 0 AND b.del_flag = 0 
+			<if test="amsArchivesFiles != null and amsArchivesFiles.groupId != null and amsArchivesFiles.groupId != ''">
+			AND b.group_id=#{amsArchivesFiles.groupId}
+			</if>
+			
+			<if test="fileName != null and fileName != ''">
+				AND a.file_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fileName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fileName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fileName},'%')</if>
+			</if>
+			<if test="amsArchivesFiles != null and amsArchivesFiles.genreId != null and amsArchivesFiles.genreId != ''">
+			AND b.genre_id=#{amsArchivesFiles.genreId}
+			</if>
+		</where>
+		<!-- <choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise> -->
+				ORDER BY b.sort ASC
+		<!-- 	</otherwise>
+		</choose> -->
+	</select>
+	
+	<select id="findAmsFileInfoAllList" resultType="AmsFileInfo">
+		SELECT 
+			<include refid="amsFileInfoColumns"/>
+		FROM ams_file_info a
+		<where>
+			a.del_flag = 0  
+			<if test="projectId != null and  projectId != ''">
+			AND a.project_id=#{projectId}
+			</if>
+			<if test="amsArchivesFiles != null and amsArchivesFiles.groupId != null and amsArchivesFiles.groupId != ''">
+			AND a.id NOT IN 
+			<!-- 
+			(select record_id from  ams_archives_files  where del_flag = 0  and  group_id=#{amsArchivesFiles.groupId})
+			 -->
+			 (select record_id from  ams_archives_files  where del_flag = 0)
+			</if>
+			<if test="fileName != null and fileName != ''">
+				AND a.file_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fileName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fileName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fileName},'%')</if>
+			</if>
+			<if test="unitProjectId !='-1' and unitProjectId != null and unitProjectId != ''">
+				AND a.unit_project_id = #{unitProjectId} 
+			</if>
+			<if test="unitProjectId == '-1'">
+				AND a.unit_project_id = '' 
+			</if>
+			<if test="recordId != null and recordId != ''">
+				AND a.record_id = #{recordId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findProArchivesList" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>
+		FROM ams_archives_info a
+		<if test="unitProjectId=='-1'">
+		left join ams_acceptance_archives b on b.archive_id=a.id
+		</if> 
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}  and a.unit_project_id=#{unitProjectId}
+			<if test="projectId != null and  projectId != ''">
+			AND a.project_id=#{projectId}
+			</if>
+			<if test="acceptanceId != null and  acceptanceId  != '' and unitProjectId=='-1'">
+			AND b.acceptance_id=#{acceptanceId}
+			</if>
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="transferFindProArchivesPage" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>
+		FROM ams_transfer_archives c
+		left join ams_acceptance_archives b on c.acceptance_id=b.acceptance_id
+		left join ams_archives_info a  on b.archive_id=a.id
+		
+		<where>
+			a.unit_project_id=-1
+			<if test="projectId != null and  projectId != ''">
+			AND a.project_id=#{projectId}
+			</if>
+			<if test="acceptanceId != null and  acceptanceId  != ''">
+			AND c.transfer_id=#{acceptanceId}
+			</if>
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getAmsArchivesInfoId" resultType="String">
+		SELECT id
+		FROM ams_archives_info
+		WHERE project_id= #{id}
+	</select>
+	<select id="findUnitProjectAcceptanceCount" resultType="Integer">
+		SELECT COUNT(*) FROM ams_acceptance a LEFT JOIN ams_acceptance_archives b on a.id = b.acceptance_id 
+		WHERE 1=1 AND a.status in (1,2,3) AND b.unit_project_id = #{id}
+	</select>
+	<select id="findArchivesAcceptanceCount" resultType="Integer">
+		SELECT COUNT(*) FROM ams_acceptance a LEFT JOIN ams_acceptance_archives b on a.id = b.acceptance_id 
+		WHERE 1=1 AND a.status in (1,2,3) AND b.archive_id = #{archId}
+	</select>
+	<update id="deleteArchivesFiles">
+		UPDATE ams_archives_files set
+		del_flag = 1
+		WHERE group_id = #{groupId} AND del_flag = 0
+	</update>
+	<select id="findArchivesInfoIdByProject" resultType="java.lang.String">
+		SELECT id FROM ams_archives_info WHERE project_id= #{projectId} and unit_project_id='-1' and del_flag = 0
+	</select>
+	<select id="findAmsArchivesListByFileIdArchId" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>
+		FROM
+		(SELECT c.* FROM ams_archives_info c LEFT JOIN ams_archives_files b ON c.id=b.group_id where b.record_id=#{1} AND b.del_flag=0) a 
+		INNER  JOIN
+		(SELECT * FROM ams_acceptance_archives WHERE acceptance_id=#{0}) d ON a.id = d.archive_id
+	</select>
+	<select id="findAmsArchivesListByFileIdUnitProId" resultType="AmsArchivesInfo">
+		SELECT 
+			<include refid="amsArchivesInfoColumns"/>
+		FROM
+		(SELECT c.* FROM ams_archives_info c LEFT JOIN ams_archives_files b ON c.id=b.group_id where b.record_id=#{1} AND b.del_flag=0) a 
+		INNER  JOIN
+		(SELECT * FROM ams_acceptance_archives WHERE acceptance_id=#{0}) d ON a.unit_project_id = d.unit_project_id
+	</select>
+	<select id="findGenreIdById" resultType="java.lang.String">
+		SELECT  DISTINCT genre_id FROM ams_archives_files WHERE group_id=#{groupId} and del_flag = 0
+	</select>
+</mapper>

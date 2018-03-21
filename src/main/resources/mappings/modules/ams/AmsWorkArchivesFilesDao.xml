@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsWorkArchivesFilesDao">
+    
+	<sql id="amsWorkArchivesFilesColumns">
+		a.id AS "id",
+		a.group_id AS "groupId",
+		a.file_name AS "fileName",
+		a.file_no AS "fileNo",
+		a.author AS "author",
+		a.form_date AS "formDate",
+		a.filecount AS "filecount",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.upload_type AS "uploadType",
+		a.status AS "status",
+		a.file_json AS "fileJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsWorkArchivesFilesJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsWorkArchivesFiles">
+		SELECT 
+			<include refid="amsWorkArchivesFilesColumns"/>
+		FROM ams_work_archives_files a
+		<include refid="amsWorkArchivesFilesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsWorkArchivesFiles">
+		SELECT 
+			<include refid="amsWorkArchivesFilesColumns"/>
+		FROM ams_work_archives_files a
+		<include refid="amsWorkArchivesFilesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="groupId != null and groupId != ''">
+				AND a.group_id = #{groupId}  
+			</if>
+			<if test="fileName != null and fileName != ''">
+				AND a.file_name LIKE
+				<if test="dbName == 'oracle'">'%,'||#{fileName}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{fileName}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{fileName},'%')</if>  
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getByParam" resultType="AmsWorkArchivesFiles">
+		SELECT 
+			<include refid="amsWorkArchivesFilesColumns"/>
+		FROM ams_work_archives_files a
+		<include refid="amsWorkArchivesFilesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="groupId != null and groupId != ''">
+				AND a.group_id = #{groupId}  
+			</if>
+			<if test="fileName != null and fileName != ''">
+				AND a.file_name = #{fileName}  
+			</if>
+		</where>
+	</select>
+	
+	<select id="findAllList" resultType="AmsWorkArchivesFiles">
+		SELECT 
+			<include refid="amsWorkArchivesFilesColumns"/>
+		FROM ams_work_archives_files a
+		<include refid="amsWorkArchivesFilesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_work_archives_files(
+			id,
+			group_id,
+			file_name,
+			file_no,
+			author,
+			form_date,
+			filecount,
+			file_path,
+			file_type,
+			upload_type,
+			status,
+			file_json,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{groupId},
+			#{fileName},
+			#{fileNo},
+			#{author},
+			#{formDate},
+			#{filecount},
+			#{filePath},
+			#{fileType},
+			#{uploadType},
+			#{status},
+			#{fileJson},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_work_archives_files SET 	
+			group_id = #{groupId},
+			file_name = #{fileName},
+			file_no = #{fileNo},
+			author = #{author},
+			form_date = #{formDate},
+			filecount = #{filecount},
+			file_path = #{filePath},
+			file_type = #{fileType},
+			upload_type = #{uploadType},
+			status = #{status},
+			file_json = #{fileJson},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			exten1 = #{exten1},
+			exten2 = #{exten2},
+			exten3 = #{exten3},
+			exten4 = #{exten4},
+			exten5 = #{exten5}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_work_archives_files SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

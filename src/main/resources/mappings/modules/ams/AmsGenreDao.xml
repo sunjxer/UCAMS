@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsGenreDao">
+    
+	<sql id="amsGenreColumns">
+		a.id AS "id",
+		a.parent_id AS "parent.id",
+		a.parent_ids AS "parentIds",
+		a.name AS "name",
+		a.sort AS "sort",
+		a.code AS "code",
+		a.type AS "type",
+		a.isEndChild AS "isEndChild",
+		a.create_unit AS "createUnit",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="amsGenreJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsGenre">
+		SELECT 
+			<include refid="amsGenreColumns"/>
+		FROM ams_genre a
+		<include refid="amsGenreJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsGenre">
+		SELECT 
+			<include refid="amsGenreColumns"/>
+		FROM ams_genre a
+		<include refid="amsGenreJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="parentIds != null and parentIds != ''">
+				AND a.parent_ids LIKE  
+				<if test="dbName == 'oracle'">'%,'||#{parentIds}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{parentIds}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{parentIds},'%')</if>
+			</if>
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	<select id="fileFindList" resultType="AmsGenre">
+		SELECT 
+			<include refid="amsGenreColumns"/>
+			,b.id as isHaveFile 
+		FROM ams_genre a
+		left join ams_file_info b on a.id=b.record_id
+		 and b.del_flag = #{DEL_FLAG_NORMAL}
+		 <if test="projectId != null and projectId != ''">
+			AND b.project_id =#{projectId} 
+		</if>
+		  AND b.unit_project_id =#{unitProjectId} 
+		where
+			a.del_flag = #{DEL_FLAG_NORMAL}    and a.parent_id !='1'
+			<if test="type != null and type != ''">
+				AND a.type =#{type} 
+			</if>
+			<if test="isHaveFile != null and isHaveFile ==1">
+				<if test="projectId != null and projectId != ''">
+					AND b.project_id =#{projectId} 
+				</if>
+				<if test="unitProjectId != null and unitProjectId != ''">
+					AND b.unit_project_id =#{unitProjectId} 
+				</if>
+			</if>
+			
+			<if test="createUnit != null and createUnit != ''">
+				AND ( a.create_unit =#{createUnit} OR a.create_unit = '-1') 
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name like CONCAT('%',#{name},'%')
+			</if>
+			group by a.id
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="findAmsGenreList" resultType="AmsGenre">
+		SELECT 
+			<include refid="amsGenreColumns"/>
+			<!-- ,b.file_name as sort -->
+		FROM ams_genre a
+		<!-- left join ams_file_info b on a.id=b.record_id and b.del_flag = #{DEL_FLAG_NORMAL} -->
+		where
+			a.del_flag = #{DEL_FLAG_NORMAL}   
+			<if test="type != null and type != ''">
+				AND a.type =#{type} 
+			</if>
+			<if test="createUnit != null and createUnit != ''">
+				AND a.create_unit =#{createUnit} 
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name like
+				<if test="dbName == 'oracle'">'%,'||#{name}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{name}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{name},'%')</if> 
+			</if>
+			
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="findAllList" resultType="AmsGenre">
+		SELECT 
+			<include refid="amsGenreColumns"/>
+		FROM ams_genre a
+		<include refid="amsGenreJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="findByParentIdsLike" resultType="AmsGenre">
+		SELECT
+			a.id,
+			a.parent_id AS "parent.id",
+			a.parent_ids
+		FROM ams_genre a
+		<include refid="amsGenreJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.parent_ids LIKE #{parentIds}
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_genre(
+			id,
+			parent_id,
+			parent_ids,
+			name,
+			sort,
+			code,
+			type,
+			isEndChild,
+			create_unit,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{parent.id},
+			#{parentIds},
+			#{name},
+			#{sort},
+			#{code},
+			#{type},
+			#{isEndChild},
+			#{createUnit},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_genre SET 	
+			parent_id = #{parent.id},
+			parent_ids = #{parentIds},
+			name = #{name},
+			sort = #{sort},
+			code = #{code},
+			type = #{type},
+			isEndChild = #{isEndChild},
+			create_unit = #{createUnit},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateParentIds">
+		UPDATE ams_genre SET 
+			parent_id = #{parent.id}, 
+			parent_ids = #{parentIds}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_genre SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id} 
+		OR parent_ids LIKE CONCAT('%',#{id},'%')
+	</update>
+	<select id="findRoleGenreList" resultType="AmsGenre">
+		SELECT 
+			<include refid="amsGenreColumns"/>
+		FROM ams_genre a
+		<where>
+			(a.create_unit = #{createUnit} or a.create_unit='-1') AND a.del_flag = 0 
+		</where>
+		ORDER BY parent_ids,a.sort asc
+	</select>
+	
+	<select id="findByCode" resultType="AmsGenre">
+		SELECT
+		<include refid="amsGenreColumns"/>
+		FROM ams_genre a
+		where a.code = #{code}
+	</select>
+	
+	<select id="findGenreFileList" resultType="AmsGenre">
+		SELECT 
+			a.id
+		FROM ams_genre a
+		<where>
+			a.create_unit!='-1' AND a.type=#{proType} AND a.del_flag = 0 
+		</where>
+		ORDER BY parent_ids,a.sort asc
+	</select>
+</mapper>

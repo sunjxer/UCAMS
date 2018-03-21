@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsAcceptanceDao">
+    
+	<sql id="amsAcceptanceColumns">
+		a.id AS "id",
+		u.id AS "user.id", 
+		u.name AS "user.name", 
+		ua.id AS "user2.id", 
+		ua.name AS "user2.name", 
+		ub.id AS "user3.id", 
+		ub.name AS "user3.name", 
+		a.proc_ins_id AS "procInsId",
+		a.projectid AS "project.id",
+		a.construction_id AS "role.id",
+		a.pre_acceptance_apply_date AS "preAcceptanceApplyDate",
+		a.pre_acceptance_applicant AS "preAcceptanceApplicant",
+		a.pre_acceptance_approval_opinions AS "preAcceptanceApprovalOpinions",
+		a.pre_acceptance_application_approver AS "preAcceptanceApplicationApprover",
+		a.pre_acceptance_approver AS "preAcceptanceApprover",
+		a.pre_acceptance_no AS "preAcceptanceNo",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5",
+		a.type AS "type",
+		p.project_Name as "project.projectName",
+		r.name as "role.name"
+	</sql>
+	
+	
+	
+	<sql id="amsAcceptanceJoins">
+	left join ams_project_info p on p.id= a.projectid 
+	 left join sys_role r on a.construction_id=r.id
+	left JOIN sys_user u ON u.id=a.pre_acceptance_applicant
+	left JOIN sys_user ua ON ua.id=a.pre_acceptance_application_approver
+	left JOIN sys_user ub ON ub.id=a.pre_acceptance_approver
+	</sql>
+    
+	<select id="get" resultType="AmsAcceptance">
+		SELECT 
+			<include refid="amsAcceptanceColumns"/>
+		FROM ams_acceptance a
+		<include refid="amsAcceptanceJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsAcceptance">
+		SELECT 
+			<include refid="amsAcceptanceColumns"/>
+		FROM ams_acceptance a
+		<include refid="amsAcceptanceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<!-- <if test="project!= null and project.projectName != null and project.projectName != ''">
+				AND p.project_name  LIKE  concat('%',#{project.projectName},'%') 
+			</if> -->
+			<if test="type!= null and type != ''">
+				AND a.type  = #{type} 
+			</if>
+			<if test="project!= null and project.id != null and project.id != ''">
+				AND p.id  = #{project.id} 
+			</if>
+			<if test="role!= null and role.id != null and role.id!= ''">
+				AND a.construction_id = #{role.id}   
+			</if>
+			<if test="beginPreAcceptanceApplyDate != null and endPreAcceptanceApplyDate != null and beginPreAcceptanceApplyDate != '' and endPreAcceptanceApplyDate != ''">
+				AND a.pre_acceptance_apply_date BETWEEN #{beginPreAcceptanceApplyDate} AND #{endPreAcceptanceApplyDate}
+			</if>
+			<if test="beginPreAcceptanceApplyDate != null  and beginPreAcceptanceApplyDate != '' and (endPreAcceptanceApplyDate == null or endPreAcceptanceApplyDate == '')">
+				AND a.pre_acceptance_apply_date BETWEEN #{beginPreAcceptanceApplyDate} AND '9999-10-20 00:00:00.0'
+			</if>
+			<if test="endPreAcceptanceApplyDate != null  and endPreAcceptanceApplyDate != '' and (beginPreAcceptanceApplyDate == null or beginPreAcceptanceApplyDate == '')">
+				AND a.pre_acceptance_apply_date BETWEEN '0000-10-20 00:00:00.0' AND  #{endPreAcceptanceApplyDate}
+			</if>
+			<!-- 移交时使用的查询 -->
+			<if test="exten1=='not in' ">
+				AND a.status='3' AND a.id   not in (select acceptance_id from ams_transfer_archives where projectid=#{project.id} and del_flag != 2) 
+			</if>
+		</where>
+			
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsAcceptance">
+		SELECT 
+			<include refid="amsAcceptanceColumns"/>
+		FROM ams_acceptance a
+		<include refid="amsAcceptanceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	
+	<insert id="insert">
+		INSERT INTO ams_acceptance(
+			id,
+			proc_ins_id,
+			projectid,
+			construction_id,
+			pre_acceptance_apply_date,
+			pre_acceptance_applicant,
+			pre_acceptance_approval_opinions,
+			pre_acceptance_application_approver,
+			pre_acceptance_approver,
+			pre_acceptance_no,
+			status,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5,
+			type
+		) VALUES (
+			#{id},
+			#{procInsId},
+			#{project.id},
+			#{role.id},
+			#{preAcceptanceApplyDate},
+			#{user.id},
+			#{preAcceptanceApprovalOpinions},
+			#{user2.id},
+			#{user3.id},
+			#{preAcceptanceNo},
+			#{status},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5},
+			#{type}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_acceptance SET 	
+			projectid= #{project.id},
+			pre_acceptance_apply_date = #{preAcceptanceApplyDate},
+			pre_acceptance_applicant = #{user.id},
+			pre_acceptance_approval_opinions = #{preAcceptanceApprovalOpinions},
+			pre_acceptance_application_approver = #{user2.id},
+			pre_acceptance_approver = #{user3.id},
+			pre_acceptance_no = #{preAcceptanceNo},
+			status = #{status},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	<update id="updateAcceptance">
+		UPDATE ams_acceptance SET 	
+			pre_acceptance_approval_opinions = #{preAcceptanceApprovalOpinions},
+			pre_acceptance_application_approver = #{user2.id},
+			pre_acceptance_approver = #{user3.id},
+			pre_acceptance_no = #{preAcceptanceNo},
+			status = #{status},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	<update id="updateDelFlag">
+		UPDATE ams_acceptance_archives SET 	
+			del_flag =2 
+		WHERE acceptance_id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_acceptance SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<delete id="deleteAmsAcceptanceArchives">
+		DELETE FROM ams_acceptance_archives WHERE acceptance_id = #{id}
+	</delete>
+	<insert id="insertAmsAcceptanceArchivesList">
+		INSERT INTO ams_acceptance_archives
+			(id, 
+			project_id,
+			acceptance_id,
+			unit_project_id,
+			archive_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag)
+		<foreach collection="amsAcceptanceArchivesList" item="accArchives" separator=" union all ">
+			SELECT 
+			 #{accArchives.id},
+			 #{accArchives.projectId},
+			 #{id},
+			 #{accArchives.unitProjectId},
+			 #{accArchives.archiveId},
+			 #{accArchives.createBy.id},
+			 #{accArchives.createDate},
+			 #{accArchives.updateBy.id},
+			 #{accArchives.updateDate},
+			 #{accArchives.remarks},
+			 #{accArchives.delFlag}
+			<if test="dbName != 'mssql'">
+			FROM dual
+			</if>
+		</foreach>
+	</insert>
+	<sql id="amsAcceptanceArchivesColumns">
+		a.id AS "id",
+		a.project_id AS "projectId",
+		a.acceptance_id AS "acceptanceId",
+		a.unit_project_id AS "unitProjectId",
+		a.archive_id AS "archiveId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		
+		b.id AS "amsUnitProInfo.id",
+		b.project_id AS "amsUnitProInfo.projectId",
+		b.unit_project_no AS "amsUnitProInfo.unitProjectNo",
+		b.unit_project_name AS "amsUnitProInfo.unitProjectName",
+		b.unit_project_address AS "amsUnitProInfo.unitProjectAddress",
+		b.unit_project_type AS "amsUnitProInfo.unitProjectType",
+		b.planning_license_number AS "amsUnitProInfo.planningLicenseNumber",
+		b.construction_permit_number AS "amsUnitProInfo.constructionPermitNumber",
+		
+		c.id AS "amsArchivesInfo.id",
+		c.archives_name AS "amsArchivesInfo.archivesName",
+		c.make_unit AS "amsArchivesInfo.makeUnit",
+		c.carrier_type AS "amsArchivesInfo.carrierType",
+		c.author AS "amsArchivesInfo.author",
+		c.make_date AS "amsArchivesInfo.makeDate",
+		c.auditor AS "amsArchivesInfo.auditor",
+		c.audit_date AS "amsArchivesInfo.auditDate",
+		
+		d.id AS "amsConstructDes.id",
+		d.project_id AS "amsConstructDes.projectId",
+		d.file_id AS "amsConstructDes.fileId",
+		d.project_name AS "amsConstructDes.projectName",
+		d.address AS "amsConstructDes.address",
+		d.construction_unit AS "amsConstructDes.constructionUnit",
+		d.project_approval_unit AS "amsConstructDes.projectApprovalUnit",
+		d.design_unit AS "amsConstructDes.designUnit",
+		d.prospecting_unit AS "amsConstructDes.prospectingUnit",
+		d.approval_number AS "amsConstructDes.approvalNumber",
+		d.planning_license_number AS "amsConstructDes.planningLicenseNumber",
+		d.land_license_number AS "amsConstructDes.landLicenseNumber",
+		d.land_permit_number AS "amsConstructDes.landPermitNumber",
+		d.topographic_map AS "amsConstructDes.topographicMap",
+		d.description_json AS "amsConstructDes.descriptionJson",
+		d.create_by AS "amsConstructDes.createBy.id",
+		d.create_date AS "amsConstructDes.createDate",
+		d.update_by AS "amsConstructDes.updateBy.id",
+		d.update_date AS "amsConstructDes.updateDate",
+		d.remarks AS "amsConstructDes.remarks",
+		d.del_flag AS "amsConstructDes.delFlag",
+		d.exten1 AS "amsConstructDes.exten1",
+		d.exten2 AS "amsConstructDes.exten2",
+		d.exten3 AS "amsConstructDes.exten3",
+		d.exten4 AS "amsConstructDes.exten4",
+		d.exten5 AS "amsConstructDes.exten5",
+		
+		e.id AS "amsLandDes.id",
+		e.project_id AS "amsLandDes.projectId",
+		e.file_id AS "amsLandDes.fileId",
+		e.project_name AS "amsLandDes.projectName",
+		e.address AS "amsLandDes.address",
+		e.land_use_unit AS "amsLandDes.landUseUnit",
+		e.expropriated_unit AS "amsLandDes.expropriatedUnit",
+		e.topographic_map AS "amsLandDes.topographicMap",
+		e.land_type AS "amsLandDes.landType",
+		e.expropriation AS "amsLandDes.expropriation",
+		e.original_land_type AS "amsLandDes.originalLandType",
+		e.approval_date AS "amsLandDes.approvalDate",
+		e.land_area AS "amsLandDes.landArea",
+		e.description_json AS "amsLandDes.descriptionJson",
+		e.create_by AS "amsLandDes.createBy.id",
+		e.create_date AS "amsLandDes.createDate",
+		e.update_by AS "amsLandDes.updateBy.id",
+		e.update_date AS "amsLandDes.updateDate",
+		e.remarks AS "amsLandDes.remarks",
+		e.del_flag AS "amsLandDes.delFlag",
+		e.exten1 AS "amsLandDes.exten1",
+		e.exten2 AS "amsLandDes.exten2",
+		e.exten3 AS "amsLandDes.exten3",
+		e.exten4 AS "amsLandDes.exten4",
+		e.exten5 AS "amsLandDes.exten5",
+		
+		f.id AS "amsArchiveMenu.id",
+		f.parent_id AS "amsArchiveMenu.parent.id",
+		f.parent_ids AS "amsArchiveMenu.parentIds",
+		f.name AS "amsArchiveMenu.name",
+		f.sort AS "amsArchiveMenu.sort",
+		f.code AS "amsArchiveMenu.code",
+		f.type AS "amsArchiveMenu.type"
+	</sql>
+	<select id="getList" resultType="AmsAcceptanceArchives">
+		SELECT 
+			<include refid="amsAcceptanceArchivesColumns"/>
+		FROM ams_acceptance_archives a
+		LEFT JOIN ams_unit_pro_info b ON a.unit_project_id=b.id  
+		LEFT JOIN ams_archives_info c ON a.archive_id=c.id 
+		LEFT JOIN ams_construct_des d ON a.archive_id=d.id 
+		LEFT JOIN ams_land_des e ON a.archive_id=e.id 
+		LEFT JOIN ams_archive_menu f ON a.archive_id=f.id 
+		<where>
+			a.acceptance_id = #{id} 
+		</where>	
+	</select>
+	<select id="getIdsList" resultType="AmsAcceptanceArchives">
+		SELECT 
+			<include refid="amsAcceptanceArchivesColumns"/>
+		FROM ams_acceptance_archives a
+		LEFT JOIN ams_unit_pro_info b ON a.unit_project_id=b.id 
+		LEFT JOIN ams_archives_info c ON a.archive_id=c.id 
+		LEFT JOIN ams_construct_des d ON a.archive_id=d.id 
+		LEFT JOIN ams_land_des e ON a.archive_id=e.id 
+		LEFT JOIN ams_archive_menu f ON a.archive_id=f.id 
+		<where>
+			a.project_id = #{project.id}
+		</where>	
+	</select>
+	
+	<!-- <select id="getAmsAcceptanceId" resultType="String">
+		SELECT id
+		FROM ams_acceptance
+		WHERE projectid= #{id}
+	</select> -->
+</mapper>

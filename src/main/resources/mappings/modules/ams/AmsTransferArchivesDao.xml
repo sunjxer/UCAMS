@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsTransferArchivesDao">
+    
+	<sql id="amsTransferArchivesColumns">
+		a.id AS "id",
+		a.projectid AS "projectid",
+		a.transfer_id AS "transferId",
+		a.acceptance_id AS "acceptance.id",
+		a.unit_project_id AS "unitProjectId",
+		a.archive_id AS "archiveId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	<sql id="amsAcceptanceColumns">
+		<!-- u.id AS "acceptance.user.id", 
+		u.name AS "acceptance.user.name", 
+		ua.id AS "acceptance.user2.id", 
+		ua.name AS "acceptance.user2.name", 
+		ub.id AS "acceptance.user3.id", 
+		ub.name AS "acceptance.user3.name", --> 
+		b.proc_ins_id AS "acceptance.procInsId",
+		b.projectid AS "acceptance.project.id",
+		b.construction_id AS "acceptance.role.id",
+		b.pre_acceptance_apply_date AS "acceptance.preAcceptanceApplyDate",
+		b.pre_acceptance_applicant AS "acceptance.preAcceptanceApplicant",
+		b.pre_acceptance_approval_opinions AS "acceptance.preAcceptanceApprovalOpinions",
+		b.pre_acceptance_application_approver AS "acceptance.preAcceptanceApplicationApprover",
+		b.pre_acceptance_approver AS "acceptance.preAcceptanceApprover",
+		b.pre_acceptance_no AS "acceptance.preAcceptanceNo"
+	</sql>
+	
+	
+	<sql id="amsTransferArchivesJoins">
+	LEFT JOIN ams_acceptance b on a.acceptance_id=b.id 
+	</sql>
+    
+	<select id="get" resultType="AmsTransferArchives">
+		SELECT 
+			<include refid="amsTransferArchivesColumns"/>
+		FROM ams_transfer_archives a
+		<include refid="amsTransferArchivesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsTransferArchives">
+		SELECT 
+			<include refid="amsTransferArchivesColumns"/>
+			,
+			<include refid="amsAcceptanceColumns"/>
+		FROM ams_transfer_archives a
+		<include refid="amsTransferArchivesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findTranList" resultType="AmsTransferArchives">
+		SELECT 
+			<include refid="amsTransferArchivesColumns"/>
+			,
+			<include refid="amsAcceptanceColumns"/>
+		FROM ams_transfer_archives a
+		<include refid="amsTransferArchivesJoins"/>
+		<where>
+			a.transfer_id=#{id}
+		</where>
+	</select>
+	
+	<select id="findAllList" resultType="AmsTransferArchives">
+		SELECT 
+			<include refid="amsTransferArchivesColumns"/>
+		FROM ams_transfer_archives a
+		<include refid="amsTransferArchivesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_transfer_archives(
+			id,
+			projectid,
+			transfer_id,
+			acceptance_id,
+			unit_project_id,
+			archive_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{projectid},
+			#{transferId},
+			#{acceptanceId},
+			#{unitProjectId},
+			#{archiveId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_transfer_archives SET 	
+			projectid = #{projectid},
+			transfer_id = #{transferId},
+			acceptance_id = #{acceptanceId},
+			unit_project_id = #{unitProjectId},
+			archive_id = #{archiveId},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_transfer_archives SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsFileInfoDao">
+    
+	<sql id="amsFileInfoColumns">
+		a.id AS "id",
+		a.unit_project_id AS "unitProjectId",
+		a.project_id AS "projectId",
+		c.record_id AS "groupId",
+		a.record_id AS "recordId",
+		a.file_name AS "fileName",
+		a.file_no AS "fileNo",
+		a.author AS "author",
+		a.form_date AS "formDate",
+		a.filecount AS "filecount",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.filesource AS "filesource",
+		a.dongle AS "dongle",
+		a.state AS "state",
+		a.file_json AS "fileJson",
+		a.structure_json AS "structureJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5",
+		b.name AS "recordFileName"
+	</sql>
+	
+	<sql id="fileInfoColumns">
+		a.id AS "id",
+		a.unit_project_id AS "unitProjectId",
+		a.project_id AS "projectId",
+		a.record_id AS "recordId",
+		a.file_name AS "fileName",
+		a.file_no AS "fileNo",
+		a.author AS "author",
+		a.form_date AS "formDate",
+		a.filecount AS "filecount",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.filesource AS "filesource",
+		a.dongle AS "dongle",
+		a.state AS "state",
+		a.file_json AS "fileJson",
+		a.structure_json AS "structureJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsFileInfoJoins">
+	left JOIN `ams_genre` b ON b.`id` = a.`record_id` and b.del_flag =  0
+	left JOIN `ams_archives_files` c ON c.`record_id` = a.`id` and c.del_flag =  0
+	
+	</sql>
+    
+    <select id="getFile" resultType="AmsFileInfo">
+    	SELECT 
+			<include refid="fileInfoColumns"/>
+		FROM ams_file_info a
+		WHERE a.id = #{id}
+    </select>
+    
+	<select id="get" resultType="AmsFileInfo">
+		SELECT 
+			<include refid="fileInfoColumns"/>
+		FROM ams_file_info a
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsFileInfo">
+		SELECT 
+			<include refid="amsFileInfoColumns"/>
+		FROM ams_file_info a
+		<include refid="amsFileInfoJoins"/>
+		
+		<where>
+		 	a.del_flag = #{DEL_FLAG_NORMAL}  and a.record_id !='-1'
+			<if test="unitProjectId != null and unitProjectId != ''">
+				AND a.unit_Project_Id =#{unitProjectId}
+			</if>
+			<if test="recordId != null and recordId != ''">
+				AND a.record_id =#{recordId}
+			</if>
+			<if test="projectId != null and projectId != ''">
+<!-- 			仅项目id存在且单位工程id不存在时，此文件才是放在项目下的 -->
+				AND a.project_Id =#{projectId} and (a.unit_Project_Id is null or a.unit_Project_Id ='') 
+			</if>
+			<if test="fileName != null and fileName != ''">
+				AND a.file_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fileName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fileName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fileName},'%')</if>
+			</if>
+		</where>
+		group by a.id
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY b.id, ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY b.id,a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!-- 文件检查使用 -->
+	<select id="findCheckList" resultType="AmsFileInfo">
+		SELECT
+		a.id AS "id",
+		a.unit_project_id AS "unitProjectId",
+		a.project_id AS "projectId",
+		a.group_id AS "groupId",
+		a.record_id AS "recordId",
+		a.file_name AS "fileName",
+		a.file_no AS "fileNo",
+		a.author AS "author",
+		a.form_date AS "formDate",
+		a.filecount AS "filecount",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.filesource AS "filesource",
+		a.dongle AS "dongle",
+		a.state AS "state",
+		a.structure_json AS "structureJson",
+		a.remarks AS "remarks"
+		FROM
+		ams_file_info a
+		LEFT JOIN `ams_archives_files` c ON a.`id` = c.record_id
+		LEFT JOIN `ams_archives_info` b ON c.`group_id` = b.`id`
+		WHERE 
+		a.del_flag =  0 AND  c.del_flag = 0
+		AND b.`id` = #{archivesId}
+	</select>
+	
+	<!-- 文件预览使用 -->
+	<select id="findArchivesFileList" resultType="AmsFileInfo">
+		SELECT
+		c.start_page AS "amsArchivesFiles.startPage",
+  		c.end_page AS "amsArchivesFiles.endPage",
+		a.id AS "id",
+		a.unit_project_id AS "unitProjectId",
+		a.project_id AS "projectId",
+		a.group_id AS "groupId",
+		a.record_id AS "recordId",
+		a.file_name AS "fileName",
+		a.file_no AS "fileNo",
+		a.author AS "author",
+		a.form_date AS "formDate",
+		a.filecount AS "filecount",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.filesource AS "filesource",
+		a.dongle AS "dongle",
+		a.state AS "state",
+		a.structure_json AS "structureJson",
+		a.remarks AS "remarks",
+		a.exten1 AS "exten1"
+		FROM
+		ams_file_info a
+		LEFT JOIN `ams_archives_files` c ON a.`id` = c.record_id
+		LEFT JOIN `ams_archives_info` b ON c.`group_id` = b.`id`
+		WHERE 
+		a.del_flag =  0
+		AND b.`id` = #{groupId}
+		ORDER BY c.sort ASC
+	</select>
+	<!--查询声像档案开始  -->
+	<sql id="amsFileInfoVideoColumns">
+		a.id AS "id",
+		a.unit_project_id AS "unitProjectId",
+		c.record_id AS "groupId",
+		a.record_id AS "recordId",
+		a.file_name AS "fileName",
+		a.file_no AS "fileNo",
+		a.author AS "author",
+		a.form_date AS "formDate",
+		a.filecount AS "filecount",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.filesource AS "filesource",
+		a.dongle AS "dongle",
+		a.state AS "state",
+		a.file_json AS "fileJson",
+		a.structure_json AS "structureJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	<select id="getVideo" resultType="AmsFileInfo">
+		SELECT 
+			<include refid="amsFileInfoVideoColumns"/>
+		FROM ams_file_info a left JOIN `ams_archives_files` c ON c.`record_id` = a.`id` and c.del_flag =  0
+		WHERE a.id = #{id}
+	</select>
+	<select id="findVideoList" resultType="AmsFileInfo">
+		SELECT 
+			<include refid="amsFileInfoVideoColumns"/>
+		FROM ams_file_info a
+		left JOIN `ams_archives_files` c ON c.`record_id` = a.`id` and c.del_flag =  0
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="createBy != null and createBy.id != null and createBy.id != ''">
+				AND a.create_by = #{createBy.id}
+			</if>
+			<if test="unitProjectId != null and unitProjectId != ''">
+				AND a.unit_Project_Id =#{unitProjectId} 
+				and a.record_id='-1'
+			</if>
+			<if test="projectId != null and projectId != ''">
+<!-- 			仅项目id存在且单位工程id不存在时，此文件才是放在项目下的 -->
+				AND a.project_Id =#{projectId} and (a.unit_Project_Id is null or a.unit_Project_Id ='') 
+				and a.record_id='-1'
+			</if>
+			<if test="fileName != null and fileName != ''">
+				AND a.file_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fileName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fileName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fileName},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!--查询声像档案结束  -->
+	
+	<select id="findAllList" resultType="AmsFileInfo">
+		SELECT 
+			<include refid="amsFileInfoColumns"/>
+		FROM ams_file_info a
+		<include refid="amsFileInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_file_info(
+			id,
+			project_id,
+			unit_project_id,
+			group_id,
+			record_id,
+			file_name,
+			file_no,
+			author,
+			form_date,
+			filecount,
+			file_path,
+			file_type,
+			filesource,
+			dongle,
+			state,
+			file_json,
+			structure_json,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{projectId},
+			#{unitProjectId},
+			#{groupId},
+			#{recordId},
+			#{fileName},
+			#{fileNo},
+			#{author},
+			#{formDate},
+			#{filecount},
+			#{filePath},
+			#{fileType},
+			#{filesource},
+			#{dongle},
+			#{state},
+			#{fileJson},
+			#{structureJson},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_file_info SET 	
+			file_name = #{fileName},
+			project_id = #{projectId},
+			file_no = #{fileNo},
+			author = #{author},
+			form_date = #{formDate},
+			filecount = #{filecount},
+			file_path = #{filePath},
+			file_type = #{fileType},
+			filesource = #{filesource},
+			dongle = #{dongle},
+			file_json = #{fileJson},
+			structure_json = #{structureJson},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_file_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 查询单位工程下是否添加文件，作为删除单位工程的依据 -->
+	<select id="getAmsFileInfoId" resultType="AmsFileInfo">
+		SELECT id
+		FROM ams_file_info
+		WHERE project_id = #{id}
+	</select>
+	
+</mapper>

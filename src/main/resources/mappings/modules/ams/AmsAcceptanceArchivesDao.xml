@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsAcceptanceArchivesDao">
+    
+	<sql id="amsAcceptanceArchivesColumns">
+		a.id AS "id",
+		a.project_id AS "projectId",
+		a.acceptance_id AS "acceptanceId",
+		a.unit_project_id AS "unitProjectId",
+		a.archive_id AS "archiveId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="amsAcceptanceArchivesJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsAcceptanceArchives">
+		SELECT 
+			<include refid="amsAcceptanceArchivesColumns"/>
+		FROM ams_acceptance_archives a
+		<include refid="amsAcceptanceArchivesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsAcceptanceArchives">
+		SELECT 
+			<include refid="amsAcceptanceArchivesColumns"/>
+		FROM ams_acceptance_archives a
+		<include refid="amsAcceptanceArchivesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsAcceptanceArchives">
+		SELECT 
+			<include refid="amsAcceptanceArchivesColumns"/>
+		FROM ams_acceptance_archives a
+		<include refid="amsAcceptanceArchivesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_acceptance_archives(
+			id,
+			project_id,
+			acceptance_id,
+			unit_project_id,
+			archive_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{projectId},
+			#{acceptanceId},
+			#{unitProjectId},
+			#{archiveId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_acceptance_archives SET 	
+			project_id = #{projectId},
+			acceptance_id = #{acceptanceId},
+			unit_project_id = #{unitProjectId},
+			archive_id = #{archiveId},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_acceptance_archives SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 根据ams_archives_info的案卷主键Id查询是否已验收  若存在，用于删除组卷-->
+	<select id="queryAmsAcceptanceArchivesColumnsById" resultType="String">
+		SELECT id
+		FROM ams_acceptance_archives
+		WHERE archive_id = #{id}
+	</select>
+	
+</mapper>

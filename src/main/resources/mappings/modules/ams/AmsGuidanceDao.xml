@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsGuidanceDao">
+    
+	<sql id="amsGuidanceColumns">
+		a.id AS "id",
+		a.proc_ins_id AS "procInsId",
+		a.projectid AS "project.id",
+		a.address AS "address",
+		a.expect_date AS "expectDate",
+		a.liaisons AS "liaisons",
+		a.telphone AS "telphone",
+		a.content AS "content",
+		a.opinion AS "opinion",
+		a.guidance AS "guidance",
+		a.guidance_date AS "guidanceDate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		p.name AS "project.name"
+	</sql>
+	
+	<sql id="amsGuidanceJoins">
+		LEFT JOIN sys_office p ON p.id = a.projectid
+	</sql>
+    
+	<select id="get" resultType="AmsGuidance">
+		SELECT 
+			<include refid="amsGuidanceColumns"/>
+		FROM ams_guidance a
+		<include refid="amsGuidanceJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsGuidance">
+		SELECT 
+			<include refid="amsGuidanceColumns"/>
+		FROM ams_guidance a
+		<include refid="amsGuidanceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="project != null and project.name != null and project.name != ''">
+				AND p.name LIKE  CONCAT('%', #{project.name}, '%')
+			</if>
+			<if test="address != null and address != ''">
+				AND a.address = #{address}
+			</if>
+			<if test="expectDate != null and expectDate != ''">
+				AND a.expect_date = #{expectDate}
+			</if>
+			<!-- <if test="guidanceDate != null and guidanceDate != ''">
+				AND a.guidance_date = #{guidanceDate}
+			</if> -->
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsGuidance">
+		SELECT 
+			<include refid="amsGuidanceColumns"/>
+		FROM ams_guidance a
+		<include refid="amsGuidanceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_guidance(
+			id,
+			proc_ins_id,
+			projectid,
+			address,
+			expect_date,
+			liaisons,
+			telphone,
+			content,
+			opinion,
+			guidance,
+			guidance_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{procInsId},
+			#{project.id},
+			#{address},
+			#{expectDate},
+			#{liaisons},
+			#{telphone},
+			#{content},
+			#{opinion},
+			#{guidance},
+			#{guidanceDate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_guidance SET 	
+			address = #{address},
+			expect_date = #{expectDate},
+			liaisons = #{liaisons},
+			telphone = #{telphone},
+			content = #{content},
+			opinion = #{opinion},
+			guidance = #{guidance},
+			guidance_date = #{guidanceDate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			del_flag = #{delFlag},
+			exten1 = #{exten1},
+			exten2 = #{exten2},
+			exten3 = #{exten3},
+			exten4 = #{exten4},
+			exten5 = #{exten5}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_guidance SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateOpinion">
+		UPDATE ams_guidance SET 
+			opinion = #{opinion},
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateGuidance">
+		UPDATE ams_guidance SET 
+			guidance = #{guidance},
+			guidance_date = #{guidanceDate},
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+
+	<select id="findAmsGuidanceList" resultType="AmsGuidance">
+		SELECT 
+			<include refid="amsGuidanceColumns"/>
+		FROM ams_guidance a
+		<include refid="amsGuidanceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} 
+			<if test="ids !=null and ids.size() > 0">
+				AND a.projectid IN 
+				<foreach item="item" index="index" collection="ids" open="(" separator="," close=")">  
+	 				 #{item}  
+				</foreach>
+			</if>
+			<if test="project != null and project.name != null and project.name != ''">
+				AND p.name LIKE CONCAT('%', #{project.name}, '%')
+					
+			</if>
+			<if test="address != null and address != ''">
+				AND a.address = #{address}
+			</if>
+			<if test="expectDate != null and expectDate != ''">
+				AND a.expect_date = #{expectDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getAmsGuidanceId" resultType="String">
+		SELECT id
+		FROM ams_guidance
+		WHERE projectid = #{id}
+	</select>
+</mapper>

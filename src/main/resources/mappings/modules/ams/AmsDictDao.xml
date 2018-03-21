@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsDictDao">
+    
+	<select id="get" resultType="AmsDict">
+		SELECT 
+			* 
+		FROM ams_dict 
+		WHERE id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsDict">
+		SELECT 
+			* 
+		FROM ams_dict 
+		WHERE del_flag = #{DEL_FLAG_NORMAL} 
+		<if test="type != null and type != ''">
+			AND type = #{type}
+		</if>
+		<if test="description != null and description != ''">
+			AND description LIKE 
+					<if test="dbName == 'oracle'">'%'||#{description}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{description}+'%'</if>
+					<if test="dbName == 'mysql'">CONCAT('%', #{description}, '%')</if>
+		</if>
+		ORDER BY type, sort, update_date DESC
+	</select>
+	
+	<select id="findAllList" resultType="AmsDict">
+		SELECT 
+			* 
+		FROM ams_dict 
+		WHERE del_flag = #{DEL_FLAG_NORMAL} 
+		ORDER BY type, sort, update_date DESC
+	</select>
+	
+	<select id="findTypeList" resultType="string">
+		SELECT 
+			type 
+		FROM ams_dict 
+		WHERE del_flag = #{DEL_FLAG_NORMAL} 
+		GROUP BY type
+		ORDER BY type
+	</select>
+	<select id="findParentDictList" resultType="AmsDict">
+		SELECT 
+			* 
+		FROM ams_dict  a
+		WHERE del_flag = #{DEL_FLAG_NORMAL} 
+		AND a.parent_id = '0'
+		<if test="typeFlag != null and typeFlag != ''">
+		AND a.type_flag LIKE concat('%',#{typeFlag},'%')
+		</if>
+		
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_dict(
+			id, 
+			value, 
+			label, 
+			type, 
+			description, 
+			sort, 
+			parent_id,
+			type_flag,
+			create_by, 
+			create_date, 
+			update_by, 
+			update_date, 
+			remarks, 
+			del_flag
+		) VALUES (
+			#{id}, 
+			#{value}, 
+			#{label}, 
+			#{type}, 
+			#{description}, 
+			#{sort}, 
+			#{parentId},
+			#{typeFlag},
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{remarks}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_dict SET 
+			value = #{value}, 
+			label = #{label}, 
+			type = #{type}, 
+			description = #{description}, 
+			sort = #{sort}, 
+			parent_id=#{parentId},
+			type_flag=#{typeFlag},
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}, 
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_dict SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

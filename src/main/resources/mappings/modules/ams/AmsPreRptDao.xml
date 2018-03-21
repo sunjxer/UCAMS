@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsPreRptDao">
+    
+	<sql id="amsPreRptColumns">
+		a.id AS "id",
+		a.transfer_id AS "transferId",
+		a.error_type AS "errorType",
+		a.error AS "error",
+		a.opersion AS "opersion",
+		a.state AS "state",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsPreRptJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsPreRpt">
+		SELECT 
+			<include refid="amsPreRptColumns"/>
+		FROM ams_pre_rpt a
+		<include refid="amsPreRptJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsPreRpt">
+		SELECT 
+			<include refid="amsPreRptColumns"/>
+		FROM ams_pre_rpt a
+		<include refid="amsPreRptJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="transferId != null and transferId != ''">
+				AND a.transfer_id = #{transferId}
+			</if>
+			<if test="errorType != null and errorType != ''">
+				AND a.error_type = #{errorType}
+			</if>
+			<if test="opersion != null and opersion != ''">
+				AND a.opersion = #{opersion}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsPreRpt">
+		SELECT 
+			<include refid="amsPreRptColumns"/>
+		FROM ams_pre_rpt a
+		<include refid="amsPreRptJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_pre_rpt(
+			id,
+			transfer_id,
+			error_type,
+			error,
+			opersion,
+			state,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{transferId},
+			#{errorType},
+			#{error},
+			#{opersion},
+			#{state},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_pre_rpt SET 	
+			error_type = #{errorType},
+			error = #{error},
+			opersion = #{opersion},
+			state = #{state},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			del_flag = #{delFlag}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_pre_rpt SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

@@ -1,0 +1,258 @@
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+<meta charset="utf-8" />
+<!-- IE7 mode -->
+<script type="text/javascript">
+	var ctx = '${ctx}', ctxStatic = '${ctxStatic}';
+</script>
+<title>文件预览</title>
+<meta name="renderer" content="ie-comp">
+<link href="${ctxStatic}/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="${ctxStatic}/test/css/default.css">
+<link href="${ctxStatic}/test/css/fileinput.css" media="all" rel="stylesheet" type="text/css" />
+<script src="${ctxStatic}/assets/js/jquery-2.2.4.min.js" type="text/javascript"></script>
+<script src="${ctxStatic}/test/js/fileinput.js" type="text/javascript"></script>
+<script src="${ctxStatic}/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="${ctxStatic}/Swiper-3.4.2/dist/css/swiper.min.css">
+<script src="${ctxStatic}/Swiper-3.4.2/dist/js/swiper.min.js"></script>
+<!-- Demo styles -->
+<style>
+html, body {
+	position: relative;
+	height: 100%;
+}
+
+body {
+	background: #eee;
+	font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	color: #000;
+	margin: 0;
+	padding: 0;
+}
+
+.swiper-container {
+	width: 100%;
+	height: 100%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.swiper-slide {
+	text-align: center;
+	font-size: 18px;
+	background: #fff;
+	/* Center slide text vertically */
+	-webkit-box-pack: center;
+	-ms-flex-pack: center;
+	-webkit-justify-content: center;
+	justify-content: center;
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	-webkit-align-items: center;
+	align-items: center;
+}
+</style>
+</head>
+<body>
+	<div class="swiper-container">
+		<div class="swiper-wrapper">
+			<div class="swiper-slide">
+				<div class="container kv-main">
+					<form enctype="multipart/form-data">
+						<hr>
+						<div class="form-group">
+							<div class="file-input">
+								<div class="file-preview" style="height: 85% !important;">
+									<div class=" file-drop-zone" style="height: 96% !important;">
+										<div class="file-preview-thumbnails">
+											<div class="file-live-thumbs" style="padding-left: 6% !important; padding-top: 1% !important;">
+												<!-- 单个预览div start -->
+												<c:forEach items="${page.list}" var="fileInfo">
+													<div class="file-preview-frame" id="preview-1502084065708-0" data-fileindex="0" 
+															data-template="pdf" title="${fileInfo.fileName}" style="width: 160px; height: 160px;">
+														<div class="kv-file-content">
+														<c:choose>
+															 <c:when test="${fileInfo.fileName}">
+														        <embed class="kv-preview-data"
+																src="http://localhost:8080/fixed/test02.pdf"
+																type="application/pdf" width="160px" height="160px">
+														    </c:when>
+														    <c:otherwise>
+														        <img src="http://localhost:8080/fixed/fileerror.png" class="kv-preview-data file-preview-image" 
+																	title="非法文件" alt="error" style="width:auto;height:160px;">
+														    </c:otherwise>
+														</c:choose>											
+														</div>
+														<div class="file-thumbnail-footer">
+															<div class="file-footer-caption"
+																title="${fileInfo.fileName}"> ${fileInfo.fileName} <br>
+																<samp>(1-12页)</samp>
+															</div>
+															<div class="file-actions">
+																<div class="file-footer-buttons">
+																	<button type="button" 
+																				  id="showModal" 
+																				  fileName="${fileInfo.fileName}" 
+																				  fileUrl="${fileInfo.filePath}" 
+																				  filePage="1" 
+																				  isOverdue="0" 
+																			class="kv-file-zoom btn btn-xs btn-default" title="预览文件">
+																		<i class="glyphicon glyphicon-zoom-in"></i>
+																	</button>
+																</div>
+															</div>
+														</div>
+													</div>
+												</c:forEach>
+												<!-- 单个预览div end -->
+											</div>
+										</div>
+										<div class="clearfix"></div>
+										<div class="file-preview-status text-center text-success"></div>
+										<div class="kv-fileinput-error file-error-message" style="display: none;"></div>
+									</div>
+								</div>
+								<span>第&nbsp; <font id="thisPage" ></font>&nbsp;页，共&nbsp;<font id="pageNum"></font>&nbsp;页</span>
+								<div class="kv-upload-progress hide"> <div class="progress"></div></div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- 翻页设置 -->
+		<div class="swiper-button-next" id="btnNext"></div>
+		<div class="swiper-button-prev " id="btnPrev"></div>
+		<form:form id="searchForm" action="${ctx}/test/restful/toPreviewFile" method="post">
+			<input id="count" name="count" type="hidden" value="${page.count}" />
+			<input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}" />
+			<input id="pageSize" name="pageSize" type="hidden" value="${page.pageSize}" />
+		</form:form>
+	</div>
+	
+	<!-- 弹出预览 start-->
+		<div id="kvFileinputModal" class="file-zoom-dialog modal fade in" tabindex="-1" aria-labelledby="kvFileinputModalLabel" style="display:none;">
+			<div class="modal-dialog modal-lg" role="document">
+		  	<div class="modal-content">
+		    <div class="modal-header">
+		      <div class="kv-zoom-actions pull-right">
+			      <button type="button" class="btn btn-default btn-borderless" 
+			      		title="Toggle borderless mode" data-toggle="button" aria-pressed="false" autocomplete="off">
+			      	<i class="glyphicon glyphicon-resize-full"></i>
+			      </button>
+			      <button type="button" class="btn btn-default btn-close" 
+			      		title="Close detailed preview" data-dismiss="modal" aria-hidden="true">
+			      		<i class="glyphicon glyphicon-remove"></i>
+			      </button>
+		      </div>
+		      <h3 class="modal-title"> <small><span class="kv-zoom-title">文件名</span></small></h3>
+		    </div>
+		    <div class="modal-body">
+		      <div class="floating-buttons"></div>
+		      <div class="kv-zoom-body file-zoom-content" id="showPdfModel"></div>
+			</div>
+		  </div>
+		</div>
+		</div>
+	<!-- 弹出预览 end -->
+	
+	<script type="text/javascript">
+		var no = $('#pageNo').val();
+	  	var size = $('#pageSize').val();
+	  	var count = $('#count').val();
+	  	var pageNum = Math.ceil(count/size); //计算页数，向上取整
+		$.onchange= {				
+				nextButton:function(){
+	              	if(no*size < count){   		
+	              		no ++;
+	              		$('#pageNo').val(no);
+	                  	$("#searchForm").submit();
+	              	}     
+	            },
+			    prevButton:function(){
+	              	if(no*size != size){
+	              		no --;
+	              		$('#pageNo').val(no);
+	                  	$("#searchForm").submit();
+	              	}         
+				 },
+	            initSwiperBtn:function(){
+	            	$('#thisPage').text(no);
+            		$('#pageNum').text(pageNum);
+	            	if(no * size >= count){
+	            		$('#btnNext').addClass('swiper-button-disabled');
+	            	}
+	            	if(no * size == size){
+	            		$('#btnPrev').addClass('swiper-button-disabled');
+	            	}
+	            }
+		}
+		$(function(){  
+			//初始化按钮状态
+			$.onchange.initSwiperBtn();
+			//键盘 翻页
+		    $("body").keydown(function(event){ ;
+		      if(event.keyCode==37){
+		    	  $.onchange.prevButton();
+		      }
+		      if(event.keyCode==39){
+		    	  $.onchange.nextButton();
+		      }
+		    }); 
+			//下一页
+			$('#btnNext').click(function(){  
+				$.onchange.nextButton();
+            });  
+			//上一页
+			$('#btnPrev').click(function(){  
+				$.onchange.prevButton();
+            });  
+			$('.btn-close').click(function(){  
+				$('#kvFileinputModal').hide();
+            });  
+			$("[id=showModal]").each(function(){ 
+				$(this).click(function(){ 
+					var isOverdue =$(this).attr('isOverdue');  //是否非法
+					if(isOverdue != 1){
+						var fileUrl =$(this).attr('fileUrl');  //文件路径
+						var fileName =$(this).attr('fileName');  //文件名称
+						var html = '';
+						//切换显示模版
+						if(2==1){  //图片
+							html+= "<img class='kv-preview-data file-preview-image file-zoom-detail'";
+							html+="src='"+"http://localhost:8080/fixed/fileerror.png"+"'";
+							html+="title='' style='width: auto; height: auto; max-width: 100%; max-height: 100%;'>";
+							
+						}else{	    //PDF
+							html+= "<embed class='kv-preview-data file-zoom-detail'";
+							html+="src='"+"http://localhost:8080/fixed/test02.pdf"+"'";
+							html+="type='application/pdf' style='width: 100%; height: 100%; min-height: 480px;'";
+							html+="internalinstanceid='9'>";	   
+						}
+						//初始化预览框数据
+						$('.kv-zoom-title').text(fileName); 
+						$('#showPdfModel').html(html);
+						$('#kvFileinputModal').show();
+					}else{
+						alert("非法文件");
+					}
+				})
+			}); 
+			//PDF预览窗口，全屏控制
+			$('.btn-borderless').click(function(){  
+				if($('#kvFileinputModal').hasClass('file-zoom-fullscreen')){
+					$('#kvFileinputModal').removeClass('file-zoom-fullscreen');
+					$("#showPdfModel").removeAttr("style");
+				}else{
+					$('#kvFileinputModal').addClass('file-zoom-fullscreen');
+					//$('#showPdfModel').find('.file-zoom-content').height($(window).height())
+					$('#showPdfModel').attr('style','height:90%!important;');
+				}
+            }); 
+		})
+	</script>
+</body>
+</html>

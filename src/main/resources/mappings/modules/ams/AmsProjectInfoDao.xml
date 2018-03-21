@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsProjectInfoDao">
+    
+	<sql id="amsProjectInfoColumns">
+		a.id AS "id",
+		a.proc_ins_id AS "procInsId",
+		a.construction_id AS "constructionId",
+		a.project_type AS "projectType",
+		a.project_no AS "projectNo",
+		a.project_name AS "projectName",
+		a.local AS "local",
+		a.address AS "address",
+		a.project_approval_unit AS "projectApprovalUnit",
+		a.design_unit AS "designUnit",
+		a.prospecting_unit AS "prospectingUnit",
+		a.supervision_unit AS "supervisionUnit",
+		a.approval_number AS "approvalNumber",
+		a.approval_url AS "approvalUrl",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.planning_license_url AS "planningLicenseUrl",
+		a.land_license_number AS "landLicenseNumber",
+		a.land_license_url AS "landLicenseUrl",
+		a.land_permit_number AS "landPermitNumber",
+		a.land_permit_url AS "landPermitUrl",
+		a.start_date AS "startDate",
+		a.finish_date AS "finishDate",
+		a.land_leasing_period AS "landLeasingPeriod",
+		a.description_json AS "descriptionJson",
+		a.business_man AS "businessMan",
+		a.check_status AS "checkStatus",
+		a.opinion AS "opinion",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.isfirst AS "isfirst",
+		a.isonline AS "isonline",		
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+		
+	</sql>
+	
+	<sql id="amsProjectInfoJoins">
+		LEFT JOIN sys_area a7 ON a7.id = a.local
+	</sql>
+    <sql id="amsBusinessmanJoins">
+		LEFT JOIN sys_user business ON business.id = a.business_man
+	</sql>
+    
+    <sql id="amsProjectInfoWhere">
+		WHERE isonline='0' 
+	</sql>
+    
+	<select id="get" resultType="AmsProjectInfo">
+		SELECT 
+			<include refid="amsProjectInfoColumns"/>
+			,
+			a7.name AS "area.name" ,business.name As "businessManName"
+		FROM ams_project_info a
+		<include refid="amsProjectInfoJoins"/>
+		<include refid="amsBusinessmanJoins"/>		
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsProjectInfo">
+		SELECT 
+			<include refid="amsProjectInfoColumns"/>	
+			,r.name AS "role.name" 
+			,u.name AS "user.name" 
+		FROM ams_project_info a
+		<include refid="amsProjectInfoJoins"/>
+		LEFT JOIN sys_role r ON r.id = a.construction_id 
+		 LEFT JOIN sys_user u ON u.id = a.business_man
+		 LEFT JOIN sys_office o ON o.`id` = a.`id`
+		<where>
+		    a.isonline='0' AND a.del_flag = #{DEL_FLAG_NORMAL} 
+			${sqlMap.dsf}
+<!-- 			<if test="constructionId != null and constructionId != ''">
+				AND a.construction_id = #{constructionId}
+			</if> -->
+			<if test="projectType != null and projectType != ''">
+				AND a.project_type = #{projectType}
+			</if>
+			<if test="planningLicenseNumber != null and planningLicenseNumber != ''">
+				AND a.planning_license_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{planningLicenseNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{planningLicenseNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{planningLicenseNumber},'%')</if>
+			</if>
+			<if test="projectName != null and projectName != ''">
+				AND a.project_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{projectName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{projectName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{projectName},'%')</if>
+			</if>
+			<if test="landPermitNumber != null and landPermitNumber != ''">
+				AND a.land_permit_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{landPermitNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{landPermitNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{landPermitNumber},'%')</if>
+			</if>
+			<if test="businessMan != null and businessMan != ''">
+				AND u.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{businessMan}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{businessMan}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{businessMan},'%')</if>
+			</if>
+			<if test="checkStatus != null and checkStatus != ''">
+				AND a.check_status = #{checkStatus}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsProjectInfo">
+		SELECT 
+			<include refid="amsProjectInfoColumns"/>
+		FROM ams_project_info a
+		<include refid="amsProjectInfoJoins"/>
+		<where>
+			a.isonline='0' AND a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_project_info(
+			id,
+			proc_ins_id,
+			construction_id,
+			project_type,
+			project_no,
+			project_name,
+			local,
+			address,
+			project_approval_unit,
+			design_unit,
+			prospecting_unit,
+			supervision_unit,
+			approval_number,
+			approval_url,
+			planning_license_number,
+			planning_license_url,
+			land_license_number,
+			land_license_url,
+			land_permit_number,
+			land_permit_url,
+			start_date,
+			finish_date,
+			land_leasing_period,
+			description_json,
+			business_man,
+			isfirst,
+			isonline,
+			check_status,
+			opinion,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{procInsId},
+			#{constructionId},
+			#{projectType},
+			#{projectNo},
+			#{projectName},
+			#{local},
+			#{address},
+			#{projectApprovalUnit},
+			#{designUnit},
+			#{prospectingUnit},
+			#{supervisionUnit},
+			#{approvalNumber},
+			#{approvalUrl},
+			#{planningLicenseNumber},
+			#{planningLicenseUrl},
+			#{landLicenseNumber},
+			#{landLicenseUrl},
+			#{landPermitNumber},
+			#{landPermitUrl},
+			#{startDate},
+			#{finishDate},
+			#{landLeasingPeriod},
+			#{descriptionJson},
+			#{businessMan},
+			#{isfirst},
+			#{isonline},
+			#{checkStatus},
+			#{opinion},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_project_info SET 	
+			project_type = #{projectType},
+			project_no = #{projectNo},
+			project_name = #{projectName},
+			local = #{local},
+			address = #{address},
+			project_approval_unit = #{projectApprovalUnit},
+			design_unit = #{designUnit},
+			prospecting_unit = #{prospectingUnit},
+			supervision_unit = #{supervisionUnit},
+			approval_number = #{approvalNumber},
+			approval_url = #{approvalUrl},
+			planning_license_number = #{planningLicenseNumber},
+			planning_license_url = #{planningLicenseUrl},
+			land_license_number = #{landLicenseNumber},
+			land_license_url = #{landLicenseUrl},
+			land_permit_number = #{landPermitNumber},
+			land_permit_url = #{landPermitUrl},
+			start_date = #{startDate},
+			finish_date = #{finishDate},
+			land_leasing_period = #{landLeasingPeriod},
+			description_json = #{descriptionJson},
+			business_man = #{businessMan},
+			check_status = #{checkStatus},
+			construction_id = #{constructionId},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_project_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+		<!-- 根据项目名查询项目 -->
+	<select id="getByProjectName" resultType="AmsProjectInfo" parameterType="AmsProjectInfo">
+		SELECT
+			<include refid="amsProjectInfoColumns"/>
+		FROM ams_project_info a 
+		WHERE a.isonline='0' AND a.project_name = #{projectName} AND a.del_flag = #{DEL_FLAG_NORMAL} LIMIT 1
+	</select>
+			<!-- 获取当前年最大项目编号 -->
+	<select id="getProjectByNo" resultType="AmsProjectInfo"  >
+		SELECT
+			project_no AS "projectNo" 
+		FROM ams_project_info a 
+		WHERE a.isonline='0' AND YEAR(start_date)= YEAR(NOW())  AND a.del_flag = '0'  ORDER BY cast(project_no as SIGNED)  DESC  LIMIT 1
+	</select>
+	<select id="getProjectByNoNew" resultType="AmsProjectInfo"  >
+		SELECT
+			cast(right(project_no,5) as SIGNED)  AS "projectNo" 
+		FROM ams_project_info a 
+		WHERE YEAR(start_date)= YEAR(NOW())  AND a.del_flag = '0'  ORDER BY cast(right(project_no,5) as SIGNED)  DESC  LIMIT 1
+	</select>
+
+	<!-- <select id="getAddress" resultType="AmsProjectInfo"  >
+		SELECT
+			address 
+		FROM ams_project_info a 
+		WHERE 1=1 AND 
+		
+		id= #{name}
+		
+	</select> -->
+	
+	<update id="updateProjectStatus">
+		UPDATE ams_project_info SET 
+			check_status = #{checkStatus},
+			opinion =#{opinion},
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateProjectBusinessMan">
+		UPDATE ams_project_info SET 
+			business_man = #{businessMan},
+			update_by = #{updateBy.id},  
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<select id="findOfficeProjectList" resultType="AmsProjectInfo">
+		SELECT <include refid="amsProjectInfoColumns"/>
+		FROM sys_office office LEFT JOIN SYS_USER pp ON pp.id = office.primary_person INNER JOIN ams_project_info a ON office.id = a.id 
+		WHERE office.del_flag = 0 AND a.del_flag = 0 AND office.grade = 3 AND a.check_status=1
+		<!-- 数据范围过滤 -->
+		${dsf}
+		ORDER BY office.code
+	</select>
+	
+	<select id="findListByPlanningLicenseNumber" resultType="AmsProjectInfo">
+		SELECT 
+			<include refid="amsProjectInfoColumns"/>
+		FROM ams_project_info a
+		<where>
+			<if test="planningLicenseNumber != null and planningLicenseNumber != ''">
+				AND a.planning_license_number = #{planningLicenseNumber}
+			</if>
+			AND a.del_flag = 0
+		</where>
+	</select>
+	<select id="findProjectList" resultType="AmsProjectInfo">
+		SELECT 
+			<include refid="amsProjectInfoColumns"/>
+		FROM ams_project_info a
+		<include refid="amsProjectInfoJoins"/>
+		<where>
+			a.isonline='0' AND a.del_flag = 0 
+			<if test="ids != null and ids != ''">
+			and a.id in 
+			 <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">  
+ 			 #{item}
+ 			 </foreach> 
+			</if>  
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

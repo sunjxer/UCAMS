@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsArchiveMenuDao">
+    
+	<sql id="AmsArchiveMenuColumns">
+		a.id AS "id",
+		a.parent_id AS "parent.id",
+		a.parent_ids AS "parentIds",
+		a.name AS "name",
+		a.sort AS "sort",
+		a.code AS "code",
+		a.type AS "type",
+		a.isEndChild AS "isEndChild",
+		a.create_unit AS "createUnit",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="AmsArchiveMenuJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+		FROM ams_archive_menu a
+		<include refid="AmsArchiveMenuJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+		FROM ams_archive_menu a
+		<include refid="AmsArchiveMenuJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="parentIds != null and parentIds != ''">
+				AND a.parent_ids LIKE  
+				<if test="dbName == 'oracle'">'%,'||#{parentIds}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{parentIds}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{parentIds},'%')</if>
+			</if>
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	<select id="accFindList" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+		FROM ams_archive_menu a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and length(a.parent_ids)-length(replace(a.parent_ids,',',''))=3 
+			and a.id in  (SELECT b.parent_id FROM ams_archive_menu b inner join ams_file_info c on  b.id=c.record_id and  c.del_flag=0 where b.del_flag = 0 and c.project_id=#{projectId} ) 
+			<if test="parentIds != null and parentIds != ''">
+				AND a.parent_ids LIKE  
+				<if test="dbName == 'oracle'">'%,'||#{parentIds}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{parentIds}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{parentIds},'%')</if>
+			</if>
+			<if test="ids != null and ids != '' and (exten1=='not in')">
+				 AND a.id not in 
+				<foreach item="iem" index="index" collection="ids" open="(" separator="," close=")">  
+ 				 #{iem,jdbcType=VARCHAR}  
+ 				</foreach>  
+			</if>
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	<select id="fileFindList" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+			,b.id as isHaveFile 
+		FROM ams_archive_menu a
+		left join ams_file_info b on a.id=b.record_id
+		 and b.del_flag = #{DEL_FLAG_NORMAL}
+		 <if test="projectId != null and projectId != ''">
+			AND b.project_id =#{projectId} 
+		</if>
+		  AND b.unit_project_id =#{unitProjectId} 
+		where
+			a.del_flag = #{DEL_FLAG_NORMAL}    and a.parent_id !='1'
+			<if test="type != null and type != ''">
+				AND a.type =#{type} 
+			</if>
+			<if test="isHaveFile != null and isHaveFile ==1">
+				<if test="projectId != null and projectId != ''">
+					AND b.project_id =#{projectId} 
+				</if>
+				<if test="unitProjectId != null and unitProjectId != ''">
+					AND b.unit_project_id =#{unitProjectId} 
+				</if>
+			</if>
+			<!-- <if test="isHaveFile != null and isHaveFile ==2">
+				<if test="projectId != null and projectId != ''">
+					AND b.project_id =#{projectId} 
+				</if>
+				<if test="unitProjectId != null and unitProjectId != ''">
+					AND b.unit_project_id =#{unitProjectId} 
+				</if>
+			</if> -->
+			
+			<if test="createUnit != null and createUnit != ''">
+				AND ( a.create_unit =#{createUnit} OR a.create_unit = '-1') 
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name like CONCAT('%',#{name},'%')
+			</if>
+			group by a.id
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="findAmsArchiveMenuList" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+			<!-- ,b.file_name as sort -->
+		FROM ams_archive_menu a
+		<!-- left join ams_file_info b on a.id=b.record_id and b.del_flag = #{DEL_FLAG_NORMAL} -->
+		where
+			a.del_flag = #{DEL_FLAG_NORMAL}   
+			<if test="type != null and type != ''">
+				AND a.type =#{type} 
+			</if>
+			<if test="createUnit != null and createUnit != ''">
+				AND a.create_unit =#{createUnit} 
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name like
+				<if test="dbName == 'oracle'">'%,'||#{name}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{name}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{name},'%')</if> 
+			</if>
+			
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="findAllList" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+		FROM ams_archive_menu a
+		<include refid="AmsArchiveMenuJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="findByParentIdsLike" resultType="AmsArchiveMenu">
+		SELECT
+			a.id,
+			a.parent_id AS "parent.id",
+			a.parent_ids
+		FROM ams_archive_menu a
+		<include refid="AmsArchiveMenuJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.parent_ids LIKE #{parentIds}
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_archive_menu(
+			id,
+			parent_id,
+			parent_ids,
+			name,
+			sort,
+			code,
+			type,
+			isEndChild,
+			create_unit,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{parent.id},
+			#{parentIds},
+			#{name},
+			#{sort},
+			#{code},
+			#{type},
+			#{isEndChild},
+			#{createUnit},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_archive_menu SET 	
+			parent_id = #{parent.id},
+			parent_ids = #{parentIds},
+			name = #{name},
+			sort = #{sort},
+			code = #{code},
+			type = #{type},
+			isEndChild = #{isEndChild},
+			create_unit = #{createUnit},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateParentIds">
+		UPDATE ams_archive_menu SET 
+			parent_id = #{parent.id}, 
+			parent_ids = #{parentIds}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_archive_menu SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id} 
+		OR parent_ids LIKE CONCAT('%',#{id},'%')
+	</update>
+	<select id="findRoleUcArchiveMenuList" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+		FROM ams_archive_menu a
+		<where>
+			(a.create_unit = #{createUnit} or a.create_unit='-1') AND a.del_flag = 0 
+		</where>
+		ORDER BY parent_ids,a.sort asc
+	</select>
+	
+	<select id="findByCode" resultType="AmsArchiveMenu">
+		SELECT
+		<include refid="AmsArchiveMenuColumns"/>
+		FROM ams_archive_menu a
+		where a.code = #{code}
+	</select>
+	
+	<select id="findUcArchiveMenuFileList" resultType="AmsArchiveMenu">
+		SELECT 
+			a.id
+		FROM ams_archive_menu a
+		<where>
+			a.create_unit!='-1' AND a.type=#{proType} AND a.del_flag = 0 
+		</where>
+		ORDER BY parent_ids,a.sort asc
+	</select>
+	<select id="fileMenuList" resultType="AmsArchiveMenu">
+		SELECT 
+			<include refid="AmsArchiveMenuColumns"/>
+			,b.id as isHaveFile 
+		FROM ams_archive_menu a
+		left join ams_file_info b on a.id=b.record_id
+		 and b.del_flag = #{DEL_FLAG_NORMAL}
+		AND b.project_id =#{projectId} 
+		where
+			a.del_flag = #{DEL_FLAG_NORMAL}    and a.parent_id !='1' and a.parent_id !='0'
+			<if test="type != null and type != ''">
+				AND a.type =#{type} 
+			</if>
+			<if test="isHaveFile != null and isHaveFile ==1">
+				<if test="projectId != null and projectId != ''">
+					AND b.project_id =#{projectId} 
+				</if>
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name like CONCAT('%',#{name},'%')
+			</if>
+			group by a.id
+		ORDER BY a.sort ASC
+	</select>
+</mapper>

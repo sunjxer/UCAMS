@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsUnitDetailinfoDao">
+    
+	<sql id="amsUnitDetailinfoColumns">
+		a.id AS "id",
+		a.unit_id AS "role.id",
+		a.unit_credit_code AS "unitCreditCode",
+		a.address AS "address",
+		a.qualifications AS "qualifications",
+		a.qualifications_other AS "qualificationsOther",
+		a.qualifications_number AS "qualificationsNumber",
+		a.responsible_person AS "responsiblePerson",
+		a.responsible_person_id AS "responsiblePersonId",
+		a.legal_person AS "legalPerson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsUnitDetailinfoJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsUnitDetailinfo">
+		SELECT 
+			<include refid="amsUnitDetailinfoColumns"/>
+		FROM ams_unit_detailinfo a
+		<include refid="amsUnitDetailinfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	  
+	<select id="getAmsUnitDetailinfByoUnitCreditCode" resultType="Integer">
+		SELECT COUNT(unit_credit_code)
+		FROM ams_unit_detailinfo 
+		<include refid="amsUnitDetailinfoJoins"/>
+		WHERE unit_credit_code = #{unitCreditCode}
+	</select>
+	
+	
+	<select id="getByUnitId" resultType="AmsUnitDetailinfo">
+		SELECT 
+		a.id AS "id",
+		a.unit_id AS "role.id",
+		a.unit_credit_code AS "unitCreditCode",
+		a.address AS "address",
+		a.qualifications AS "qualifications",
+		a.qualifications_other AS "qualificationsOther",
+		a.qualifications_number AS "qualificationsNumber",
+		a.responsible_person AS "responsiblePerson",
+		a.responsible_person_id AS "responsiblePersonId",
+		a.legal_person AS "legalPerson",
+		r.name
+		FROM ams_unit_detailinfo a 
+		RIGHT JOIN sys_role r ON a.unit_id = r.id
+		WHERE 
+		a.del_flag = #{DEL_FLAG_NORMAL}
+		AND
+		r.id = #{role.id}
+		limit 1
+	</select>
+	
+	<select id="findList" resultType="AmsUnitDetailinfo">
+		SELECT 
+			<include refid="amsUnitDetailinfoColumns"/>
+		FROM ams_unit_detailinfo a
+		<include refid="amsUnitDetailinfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="unitCreditCode != null and unitCreditCode != ''">
+				AND a.unit_credit_code LIKE 
+					<if test="dbName == 'oracle'">'%'||#{unitCreditCode}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{unitCreditCode}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{unitCreditCode},'%')</if>
+			</if>
+			<if test="qualifications != null and qualifications != ''">
+				AND a.qualifications = #{qualifications}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsUnitDetailinfo">
+		SELECT 
+			<include refid="amsUnitDetailinfoColumns"/>
+		FROM ams_unit_detailinfo a
+		<include refid="amsUnitDetailinfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_unit_detailinfo(
+			id,
+			unit_id,
+			unit_credit_code,
+			address,
+			qualifications,
+			qualifications_other,
+			qualifications_number,
+			responsible_person,
+			responsible_person_id,
+			legal_person,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{role.id},
+			#{unitCreditCode},
+			#{address},
+			#{qualifications},
+			#{qualificationsOther},
+			#{qualificationsNumber},
+			#{responsiblePerson},
+			#{responsiblePersonId},
+			#{legalPerson},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_unit_detailinfo SET 	
+			unit_credit_code = #{unitCreditCode},
+			address = #{address},
+			qualifications = #{qualifications},
+			qualifications_other = #{qualificationsOther},
+			qualifications_number = #{qualificationsNumber},
+			responsible_person = #{responsiblePerson},
+			responsible_person_id = #{responsiblePersonId},
+			legal_person = #{legalPerson},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_unit_detailinfo SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+</mapper>

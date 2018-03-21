@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsUnitProInfoDao">
+    
+	<sql id="amsUnitProInfoColumns">
+		a.id AS "id",
+		a.project_id AS "projectId",
+		a.unit_project_no AS "unitProjectNo",
+		a.unit_project_name AS "unitProjectName",
+		a.Land_leasing_period AS "landLeasingPeriod",
+		a.unit_project_type AS "unitProjectType",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.construction_permit_number AS "constructionPermitNumber",
+		a.start_date AS "startDate",
+		a.finish_date AS "finishDate",
+		a.design_unit AS "designUnit",
+		a.exploration_unit AS "explorationUnit",
+		a.contractor AS "contractor",
+		a.supervision_unit AS "supervisionUnit",
+		a.abscissa AS "abscissa",
+		a.ordinate AS "ordinate",
+		a.specialty_json AS "specialtyJson",
+		a.transfre_id AS "transfreId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsUnitProInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsUnitProInfo">
+		SELECT 
+			<include refid="amsUnitProInfoColumns"/>
+		FROM ams_unit_pro_info a
+		<include refid="amsUnitProInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsUnitProInfo">
+		SELECT 
+			<include refid="amsUnitProInfoColumns"/>
+			,b.status AS "amsAcceptance.status"
+		FROM ams_unit_pro_info a LEFT JOIN 
+		(SELECT c.status,d.unit_project_id FROM ams_acceptance c LEFT JOIN ams_acceptance_archives d ON c.id=d.acceptance_id WHERE d.del_flag='0')b
+		ON a.id=b.unit_project_id
+		<if test="ids != null and ids != '' and (exten1=='not in')">
+			inner join ams_archives_info c on c.unit_project_id=a.id  and c.del_flag=0 
+		</if>
+		<where>
+			AND a.del_flag = 0  AND a.project_id = #{projectId}  
+			<if test="unitProjectNo != null and unitProjectNo != ''">
+				AND a.unit_project_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{unitProjectNo,jdbcType=VARCHAR}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{unitProjectNo,jdbcType=VARCHAR}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{unitProjectNo,jdbcType=VARCHAR},'%')</if>
+			</if>
+			<if test="unitProjectName != null and unitProjectName != ''">
+				AND a.unit_project_name = #{unitProjectName,jdbcType=VARCHAR}
+			</if>
+			<if test="unitProjectType != null and unitProjectType != ''">
+				AND a.unit_project_type = #{unitProjectType,jdbcType=VARCHAR}
+			</if>
+			<if test="planningLicenseNumber != null and planningLicenseNumber != ''">
+				AND a.planning_license_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{planningLicenseNumber,jdbcType=VARCHAR}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{planningLicenseNumber,jdbcType=VARCHAR}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{planningLicenseNumber,jdbcType=VARCHAR},'%')</if>
+			</if>
+			<if test="constructionPermitNumber != null and constructionPermitNumber != ''">
+				AND a.construction_permit_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{constructionPermitNumber,jdbcType=VARCHAR}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{constructionPermitNumber,jdbcType=VARCHAR}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{constructionPermitNumber,jdbcType=VARCHAR},'%')</if>
+			</if>
+			<if test="ids != null and ids != '' and (exten1=='not in')">
+				<if test="exten1=='not in'"> AND a.id not in </if>
+				<foreach item="iem" index="index" collection="ids" open="(" separator="," close=")">  
+ 				 #{iem,jdbcType=VARCHAR}  
+ 				</foreach>  
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsUnitProInfo">
+		SELECT 
+			<include refid="amsUnitProInfoColumns"/>
+		FROM ams_unit_pro_info a
+		<include refid="amsUnitProInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_unit_pro_info(
+			id,
+			project_id,
+			unit_project_no,
+			unit_project_name,
+			Land_leasing_period,
+			unit_project_type,
+			planning_license_number,
+			construction_permit_number,
+			start_date,
+			finish_date,
+			design_unit,
+			exploration_unit,
+			contractor,
+			supervision_unit,
+			abscissa,
+			ordinate,
+			specialty_json,
+			transfre_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{projectId},
+			#{unitProjectNo},
+			#{unitProjectName},
+			#{landLeasingPeriod},
+			#{unitProjectType},
+			#{planningLicenseNumber},
+			#{constructionPermitNumber},
+			#{startDate},
+			#{finishDate},
+			#{designUnit},
+			#{explorationUnit},
+			#{contractor},
+			#{supervisionUnit},
+			#{abscissa},
+			#{ordinate},
+			#{specialtyJson},
+			#{transfreId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_unit_pro_info SET 	
+			unit_project_no = #{unitProjectNo},
+			unit_project_name = #{unitProjectName},
+			Land_leasing_period = #{landLeasingPeriod},
+			unit_project_type = #{unitProjectType},
+			planning_license_number = #{planningLicenseNumber},
+			construction_permit_number = #{constructionPermitNumber},
+			start_date = #{startDate},
+			finish_date = #{finishDate},
+			design_unit = #{designUnit},
+			exploration_unit = #{explorationUnit},
+			contractor = #{contractor},
+			specialty_json = #{specialtyJson},
+			supervision_unit = #{supervisionUnit},
+			abscissa = #{abscissa},
+			ordinate = #{ordinate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_unit_pro_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+				<!-- 获取当前年最大项目编号 -->
+	<select id="getUnitProjectByNo" resultType="AmsUnitProInfo"  >
+		SELECT
+			cast(unit_project_no as SIGNED)  AS "unitProjectNo" 
+		FROM ams_unit_pro_info a 
+		WHERE YEAR(start_date)= YEAR(NOW())  AND a.del_flag = '0'  ORDER BY cast(unit_project_no as SIGNED)  DESC  LIMIT 1
+	</select>
+	
+	
+	<select id="findOfficeUnitProjectList" resultType="AmsUnitProInfo">
+		SELECT a.id AS "id",
+		a.project_id AS "projectId",
+		a.unit_project_no AS "unitProjectNo",
+		a.unit_project_name AS "unitProjectName",
+		a.Land_leasing_period AS "landLeasingPeriod",
+		a.unit_project_type AS "unitProjectType",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.construction_permit_number AS "constructionPermitNumber",
+		a.start_date AS "startDate",
+		a.finish_date AS "finishDate",
+		a.design_unit AS "designUnit",
+		a.exploration_unit AS "explorationUnit",
+		a.contractor AS "contractor",
+		a.supervision_unit AS "supervisionUnit",
+		a.abscissa AS "abscissa",
+		a.ordinate AS "ordinate",
+		a.specialty_json AS "specialtyJson",
+		acceptance.transfre_id AS "transfreId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+		FROM sys_office office LEFT JOIN SYS_USER pp ON pp.id = office.primary_person INNER JOIN ams_unit_pro_info a ON office.id = a.id LEFT JOIN (select archives.unit_project_id,acce.id transfre_id from ams_acceptance acce inner join ams_acceptance_archives archives  on acce.id=archives.acceptance_id and (acce.status='1' or acce.status='2' or acce.status='-2' or acce.status='3') ) acceptance ON acceptance.unit_project_id=a.id 
+		WHERE office.del_flag = 0 AND a.del_flag = 0 AND office.grade = 4 
+		<!-- 数据范围过滤 -->
+		${dsf}
+		ORDER BY office.code
+	</select>
+	
+	<select id="findUnitProjectList" resultType="AmsUnitProInfo">
+		SELECT 
+			<include refid="amsUnitProInfoColumns"/>
+		FROM ams_unit_pro_info a
+		<include refid="amsUnitProInfoJoins"/>
+		<where>
+			a.del_flag = 0
+			<if test="projectId != null and projectId != ''">
+			and a.project_Id=#{projectId}
+			</if>
+			<if test="ids != null and ids != ''">
+			and a.id in 
+			 <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">  
+ 			 #{item}  
+ 			</foreach> 
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${amsUnitProInfo.page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findUnitProjectByProjectId" resultType="java.lang.String">
+		SELECT id FROM ams_unit_pro_info 
+		WHERE project_id = #{projectId}
+	</select>
+	
+	<!-- 查询单位工程详细列表 -->
+	<select id="selectUnitProjectList" resultType="AmsUnitProInfo">
+		SELECT 
+			<include refid="amsUnitProInfoColumns"/>
+		FROM ams_unit_pro_info 
+		Where id= #{projectId}
+	</select>
+	
+	<!-- 通过 预验收之后，在单位工程中加入预验收id-->
+	<update id="modifyAmsUnitProInfo">
+		UPDATE ams_unit_pro_info SET 
+		transfre_id = #{transfreId}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 档案馆对外查询二级目录单位工程
+		id,工程名称,施工单位,开工时间,竣工时间
+	 -->
+	<select id="getForeignFindUnitProInfo" resultType="AmsUnitProInfo">
+		SELECT
+			id AS id,
+		    unit_project_name AS unitProjectName,
+		    contractor AS contractor,
+		    start_date AS startDate,
+		    finish_date AS finishDate,
+		    unit_project_type AS unitProjectType		 
+		FROM ams_unit_pro_info a
+		<where>
+			a.del_flag = 0
+			<if test="projectId != null and projectId != ''">
+			and a.project_Id=#{id}
+			</if>
+		</where>
+	</select>
+	
+	<sql id="amsProjectInfoColumns">
+		a.id AS "id",
+		a.proc_ins_id AS "procInsId",
+		a.construction_id AS "constructionId",
+		a.project_type AS "projectType",
+		a.project_no AS "projectNo",
+		a.project_name AS "projectName",
+		a.local AS "local",
+		a.address AS "address",
+		a.project_approval_unit AS "projectApprovalUnit",
+		a.design_unit AS "designUnit",
+		a.prospecting_unit AS "prospectingUnit",
+		a.supervision_unit AS "supervisionUnit",
+		a.approval_number AS "approvalNumber",
+		a.approval_url AS "approvalUrl",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.planning_license_url AS "planningLicenseUrl",
+		a.land_license_number AS "landLicenseNumber",
+		a.land_license_url AS "landLicenseUrl",
+		a.land_permit_number AS "landPermitNumber",
+		a.land_permit_url AS "landPermitUrl",
+		a.start_date AS "startDate",
+		a.finish_date AS "finishDate",
+		a.land_leasing_period AS "landLeasingPeriod",
+		a.description_json AS "descriptionJson",
+		a.business_man AS "businessMan",
+		a.check_status AS "checkStatus",
+		a.opinion AS "opinion",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+		<sql id="amsProjectInfoJoins">
+		</sql>
+    <!-- 单位工程管理里工程项目列表 -->
+    	<select id="findProjectList" resultType="AmsProjectInfo">
+		SELECT 
+			<include refid="amsProjectInfoColumns"/>
+		FROM ams_project_info a
+		<include refid="amsProjectInfoJoins"/>
+		<where>
+			a.del_flag = 0 
+			<if test="ids != null and ids != ''">
+			and a.id in 
+			 <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">  
+ 			 #{item}
+ 			 </foreach> 
+			</if>  
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+    
+</mapper>

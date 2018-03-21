@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsTransferDao">
+    
+	<sql id="amsTransferColumns">
+		a.id AS "id",
+		u.id AS "user.id", 
+		u.name AS "user.name", 
+		ua.id AS "user2.id", 
+		ua.name AS "user2.name", 
+		ub.id AS "user3.id", 
+		ub.name AS "user3.name", 
+		a.proc_ins_id AS "procInsId",
+		a.projectid AS "project.id",
+		a.construction_id AS "role.id",
+		p.project_Name as "project.projectName",
+		r.name as "role.name",
+		a.transfer_applicaton_date AS "transferApplicatonDate",
+		a.estimate_transfer_date AS "estimateTransferDate",
+		a.transfer_application AS "transferApplication",
+		a.transfer_applicant_phone AS "transferApplicantPhone",
+		a.transfer_approval AS "transferApproval",
+		a.status AS "status",
+		a.acceptance_transfer_no AS "acceptanceTransferNo",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.type AS "type",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsTransferJoins">
+	left join ams_project_info p on p.id= a.projectid 
+	left join sys_role r on a.construction_id=r.id
+	left JOIN sys_user u ON u.id=a.transfer_applicant
+	left JOIN sys_user ua ON ua.id=a.transfer_approver
+	left JOIN sys_user ub ON ub.id=a.handover
+	</sql>
+    
+	<select id="get" resultType="AmsTransfer">
+		SELECT 
+			<include refid="amsTransferColumns"/>
+		FROM ams_transfer a
+		<include refid="amsTransferJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsTransfer">
+		SELECT 
+			<include refid="amsTransferColumns"/>
+		FROM ams_transfer a
+		<include refid="amsTransferJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="type!= null and type != ''">
+				AND a.type  = #{type} 
+			</if>
+			<if test="project != null and project.id != null and project.id != ''">
+				AND a.projectid = #{project.id}
+			</if>
+			<if test="role != null and role.id != null and role.id != ''">
+				AND a.construction_id = #{role.id}
+			</if>
+			<if test="beginTransferApplicatonDate != null and endTransferApplicatonDate != null and beginTransferApplicatonDate != '' and endTransferApplicatonDate != ''">
+				AND a.transfer_applicaton_date BETWEEN #{beginTransferApplicatonDate} AND #{endTransferApplicatonDate}
+			</if>
+			
+			<if test="beginTransferApplicatonDate != null  and beginTransferApplicatonDate != '' and (endTransferApplicatonDate == null or endTransferApplicatonDate == '')">
+				AND a.transfer_applicaton_date BETWEEN #{beginTransferApplicatonDate} AND '9999-10-20 00:00:00.0'
+			</if>
+			<if test="endTransferApplicatonDate != null  and endTransferApplicatonDate != '' and (beginTransferApplicatonDate == null or beginTransferApplicatonDate == '')">
+				AND a.transfer_applicaton_date BETWEEN '0000-10-20 00:00:00.0' AND  #{endTransferApplicatonDate}
+			</if>
+			
+			
+			<if test="beginEstimateTransferDate != null and endEstimateTransferDate != null and beginEstimateTransferDate != '' and endEstimateTransferDate != ''">
+				AND a.estimate_transfer_date BETWEEN #{beginEstimateTransferDate} AND #{endEstimateTransferDate}
+			</if>
+			
+			<if test="beginEstimateTransferDate != null  and beginEstimateTransferDate != '' and (endEstimateTransferDate == null or endEstimateTransferDate == '')">
+				AND a.estimate_transfer_date BETWEEN #{beginEstimateTransferDate} AND '9999-10-20 00:00:00.0'
+			</if>
+			<if test="endEstimateTransferDate != null  and endEstimateTransferDate != '' and (beginEstimateTransferDate == null or beginEstimateTransferDate == '')">
+				AND a.estimate_transfer_date BETWEEN '0000-10-20 00:00:00.0' AND  #{endEstimateTransferDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsTransfer">
+		SELECT 
+			<include refid="amsTransferColumns"/>
+		FROM ams_transfer a
+		<include refid="amsTransferJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_transfer(
+			id,
+			proc_ins_id,
+			projectid,
+			construction_id,
+			transfer_applicaton_date,
+			estimate_transfer_date,
+			transfer_application,
+			transfer_applicant,
+			transfer_applicant_phone,
+			transfer_approval,
+			transfer_approver,
+			handover,
+			status,
+			acceptance_transfer_no,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			type,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{procInsId},
+			#{project.id},
+			#{role.id},
+			#{transferApplicatonDate},
+			#{estimateTransferDate},
+			#{transferApplication},
+			#{user.id},
+			#{transferApplicantPhone},
+			#{transferApproval},
+			#{user2.id},
+			#{user3.id},
+			#{status},
+			#{acceptanceTransferNo},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{type},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_transfer SET 	
+			transfer_applicaton_date = #{transferApplicatonDate},
+			estimate_transfer_date = #{estimateTransferDate},
+			transfer_application = #{transferApplication},
+			transfer_applicant = #{user.id},
+			transfer_applicant_phone = #{transferApplicantPhone},
+			transfer_approval = #{transferApproval},
+			transfer_approver = #{user2.id},
+			handover = #{user3.id},
+			status = #{status},
+			acceptance_transfer_no = #{acceptanceTransferNo},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_transfer SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<update id="updateTransfer">
+		UPDATE ams_transfer SET 	
+			transfer_application = #{transferApplication},
+			transfer_approver = #{user2.id},
+			handover = #{user3.id},
+			transfer_approval=#{transferApproval},
+			acceptance_transfer_no = #{acceptanceTransferNo},
+			status = #{status},
+			transfer_application = #{transferApplication},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	<update id="updateDelFlag">
+		UPDATE ams_transfer_archives SET 	
+			del_flag =2 
+		WHERE transfer_id = #{id}
+	</update>
+	
+	<delete id="deleteAmsTransferArchives">
+		DELETE FROM ams_transfer_archives WHERE transfer_id = #{id}
+	</delete>
+	<insert id="insertAmsTransferArchivesList">
+		INSERT INTO ams_transfer_archives
+			(id, 
+			projectid,
+			transfer_id,
+			acceptance_id,
+			unit_project_id,
+			archive_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag)
+		<foreach collection="amsTransferArchivesList" item="accArchives" separator=" union all ">
+			SELECT 
+			 #{accArchives.id},
+			 #{accArchives.projectid},
+			 #{id},
+			 #{accArchives.acceptance.id},
+			 #{accArchives.unitProjectId},
+			 #{accArchives.archiveId},
+			 #{accArchives.createBy.id},
+			 #{accArchives.createDate},
+			 #{accArchives.updateBy.id},
+			 #{accArchives.updateDate},
+			 #{accArchives.remarks},
+			 #{accArchives.delFlag}
+			<if test="dbName != 'mssql'">
+			FROM dual
+			</if>
+		</foreach>
+	</insert>
+	<insert id="insertAmsTransferArchives">
+		INSERT INTO ams_transfer_archives
+			(id, 
+			projectid,
+			transfer_id,
+			acceptance_id,
+			unit_project_id,
+			archive_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag) VALUES (
+			 #{id},
+			 #{projectid},
+			 #{transferId},
+			 #{acceptance.id},
+			 #{unitProjectId},
+			 #{archiveId},
+			 #{acceptance.createBy.id},
+			 #{acceptance.createDate},
+			 #{acceptance.updateBy.id},
+			 #{acceptance.updateDate},
+			 #{remarks},
+			 #{delFlag}
+			)
+	</insert>
+	
+</mapper>

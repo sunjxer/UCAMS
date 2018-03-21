@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsConstructDesDao">
+    
+	<sql id="amsConstructDesColumns">
+		a.id AS "id",
+		a.project_id AS "projectId",
+		a.file_id AS "fileId",
+		a.project_name AS "projectName",
+		a.address AS "address",
+		a.construction_unit AS "constructionUnit",
+		a.project_approval_unit AS "projectApprovalUnit",
+		a.design_unit AS "designUnit",
+		a.prospecting_unit AS "prospectingUnit",
+		a.approval_number AS "approvalNumber",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.land_license_number AS "landLicenseNumber",
+		a.land_permit_number AS "landPermitNumber",
+		a.topographic_map AS "topographicMap",
+		a.description_json AS "descriptionJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsConstructDesJoins">
+	</sql>
+    
+	<select id="get" resultType="AmsConstructDes">
+		SELECT 
+			<include refid="amsConstructDesColumns"/>
+		FROM ams_construct_des a
+		<include refid="amsConstructDesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsConstructDes">
+		SELECT 
+			<include refid="amsConstructDesColumns"/>
+		FROM ams_construct_des a
+		<include refid="amsConstructDesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="projectName != null and projectName != ''">
+				AND a.project_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{projectName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{projectName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{projectName},'%')</if>
+			</if>
+			<if test="landPermitNumber != null and landPermitNumber != ''">
+				AND a.land_permit_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{landPermitNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{landPermitNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{landPermitNumber},'%')</if>
+			</if>
+			<if test="projectId != null and projectId != ''">
+				AND a.project_id = #{projectId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="accFindList" resultType="AmsConstructDes">
+		SELECT 
+			a.id AS "id",
+		a.project_id AS "projectId",
+		a.file_id AS "fileId",
+		a.project_name AS "projectName",
+		a.address AS "address",
+		a.construction_unit AS "constructionUnit",
+		a.project_approval_unit AS "projectApprovalUnit",
+		a.design_unit AS "designUnit",
+		a.prospecting_unit AS "prospectingUnit",
+		a.approval_number AS "approvalNumber",
+		a.planning_license_number AS "planningLicenseNumber",
+		a.land_license_number AS "landLicenseNumber",
+		a.land_permit_number AS "landPermitNumber",
+		a.topographic_map AS "topographicMap",
+		a.description_json AS "descriptionJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4"
+		,b.acceptance_id AS "exten5"
+		FROM ams_construct_des a
+		LEFT JOIN ams_acceptance_archives b on a.id=b.archive_id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="projectName != null and projectName != ''">
+				AND a.project_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{projectName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{projectName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{projectName},'%')</if>
+			</if>
+			<if test="projectId != null and projectId != ''">
+				AND a.project_id = #{projectId}
+			</if>
+			<if test="ids != null and ids != ''  and (exten1=='not in')">
+				<if test="exten1=='not in'">AND a.id  not in </if>
+				<foreach item="iem" index="index" collection="ids" open="(" separator="," close=")">  
+ 				 #{iem}  
+ 				</foreach>  
+					
+			</if>
+			<if test="landPermitNumber != null and landPermitNumber != ''">
+				AND a.land_permit_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{landPermitNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{landPermitNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{landPermitNumber},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsConstructDes">
+		SELECT 
+			<include refid="amsConstructDesColumns"/>
+		FROM ams_construct_des a
+		<include refid="amsConstructDesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_construct_des(
+			id,
+			project_id,
+			file_id,
+			project_name,
+			address,
+			construction_unit,
+			project_approval_unit,
+			design_unit,
+			prospecting_unit,
+			approval_number,
+			planning_license_number,
+			land_license_number,
+			land_permit_number,
+			topographic_map,
+			description_json,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{projectId},
+			#{fileId},
+			#{projectName},
+			#{address},
+			#{constructionUnit},
+			#{projectApprovalUnit},
+			#{designUnit},
+			#{prospectingUnit},
+			#{approvalNumber},
+			#{planningLicenseNumber},
+			#{landLicenseNumber},
+			#{landPermitNumber},
+			#{topographicMap},
+			#{descriptionJson},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_construct_des SET 	
+			project_name = #{projectName},
+			address = #{address},
+			construction_unit = #{constructionUnit},
+			project_approval_unit = #{projectApprovalUnit},
+			design_unit = #{designUnit},
+			prospecting_unit = #{prospectingUnit},
+			approval_number = #{approvalNumber},
+			planning_license_number = #{planningLicenseNumber},
+			land_license_number = #{landLicenseNumber},
+			land_permit_number = #{landPermitNumber},
+			topographic_map = #{topographicMap},
+			description_json = #{descriptionJson},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_construct_des SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateAcc">
+		UPDATE ams_construct_des SET 	
+			exten1=0
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findConstructListByProjectId" resultType="AmsConstructDes">
+		SELECT 
+			<include refid="amsConstructDesColumns"/>
+		FROM ams_construct_des a
+		<include refid="amsConstructDesJoins"/>
+		<where>
+			a.del_flag = 0
+			AND a.project_id IN 
+			<foreach item="item" index="index" collection="list" open="(" close=")"  separator=",">  
+ 				 #{item}  
+			</foreach>
+		</where>
+	</select>
+	
+</mapper>

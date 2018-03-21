@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.sys.dao.SysBaseInfoDao">
+    
+	<sql id="sysBaseInfoColumns">
+		a.id AS "id",
+		a.pre_unitprojectno AS "preUnitprojectno",
+		a.pre_projectno AS "preProjectno",
+		a.archives_type AS "archivesType",
+		a.archives_preno AS "archivesPreno",
+		a.archive_beginno AS "archiveBeginno",
+		a.pre_acceptance_preno AS "preAcceptancePreno",
+		a.pre_acceptance_beginno AS "preAcceptanceBeginno",
+		a.transfer_preno AS "transferPreno",
+		a.transfer_beginno AS "transferBeginno",
+		a.file_des AS "fileDes",
+		a.construct_des AS "constructDes",
+		a.land_des AS "landDes",
+		a.catalog AS "catalog",
+		a.collection_type AS "collectionType",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="sysBaseInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="SysBaseInfo">
+		SELECT 
+			<include refid="sysBaseInfoColumns"/>
+		FROM sys_base_info a
+		<include refid="sysBaseInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="SysBaseInfo">
+		SELECT 
+			<include refid="sysBaseInfoColumns"/>
+		FROM sys_base_info a
+		<include refid="sysBaseInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="archivesType != null and archivesType != ''">
+				AND a.archives_type = #{archivesType}
+			</if>
+			<if test="fileDes != null and fileDes != ''">
+				AND a.file_des = #{fileDes}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="SysBaseInfo">
+		SELECT 
+			<include refid="sysBaseInfoColumns"/>
+		FROM sys_base_info a
+		<include refid="sysBaseInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO sys_base_info(
+			id,
+			pre_unitprojectno,
+			pre_projectno,
+			archives_type,
+			archives_preno,
+			archive_beginno,
+			pre_acceptance_preno,
+			pre_acceptance_beginno,
+			transfer_preno,
+			transfer_beginno,
+			file_des,
+			construct_des,
+			land_des,
+			catalog,
+			collection_type,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{archivesType},
+			#{preProjectno},
+			#{archivesType},
+			#{archivesPreno},
+			#{archiveBeginno},
+			#{preAcceptancePreno},
+			#{preAcceptanceBeginno},
+			#{transferPreno},
+			#{transferBeginno},
+			#{fileDes},
+			#{constructDes},
+			#{landDes},
+			#{catalog},
+			#{collectionType}
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_base_info SET
+			pre_unitprojectno = #{preUnitprojectno},
+			pre_projectno = #{preProjectno}, 	
+			archives_type = #{archivesType},
+			archives_preno = #{archivesPreno},
+			archive_beginno = #{archiveBeginno},
+			pre_acceptance_preno = #{preAcceptancePreno},
+			pre_acceptance_beginno = #{preAcceptanceBeginno},
+			transfer_preno = #{transferPreno},
+			transfer_beginno = #{transferBeginno},
+			file_des = #{fileDes},
+			construct_des = #{constructDes},
+			catalog = #{catalog},
+			collection_type = #{collectionType},
+			land_des = #{landDes},
+			catalog = #{catalog},
+			remarks = #{remarks},
+			exten1 = #{exten1},
+			exten2 = #{exten2},
+			exten3 = #{exten3},
+			exten4 = #{exten4},
+			exten5 = #{exten5}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE sys_base_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findSysBaseInfo" resultType="SysBaseInfo">
+		SELECT 
+			<include refid="sysBaseInfoColumns"/>
+		FROM sys_base_info a
+		<include refid="sysBaseInfoJoins"/>
+		<where>
+			a.del_flag = 0
+		</where>
+	</select>
+</mapper>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsArchiveRulesDao">
+    
+	<sql id="amsArchiveRulesColumns">
+		a.id AS "id",
+		a.ams_genre_id AS "amsGenre.id",
+		a.ams_user_dict_id AS "amsUserDict.id",
+		a.file_name AS "fileName",
+		a.create_unit AS "createUnit",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createdate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updatedate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sort AS "sort",
+		a.org_01 AS "org01",
+		a.org_02 AS "org02",
+		a.org_03 AS "org03",
+		b.name AS "amsGenre.name",
+		d.name AS "amsUserDict.name"
+	</sql>
+	
+	<sql id="amsArchiveRulesJoins">
+	LEFT JOIN ams_genre b ON b.id = a.ams_genre_id
+	LEFT JOIN ams_user_dict d ON a.ams_user_dict_id = d.id
+	</sql>
+    
+	<select id="get" resultType="AmsArchiveRules">
+		SELECT 
+			<include refid="amsArchiveRulesColumns"/>
+		FROM ams_archive_rules a
+		<include refid="amsArchiveRulesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AmsArchiveRules">
+		SELECT 
+			<include refid="amsArchiveRulesColumns"/>
+		FROM ams_archive_rules a
+		<include refid="amsArchiveRulesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} 
+			<if test="amsGenre != null and amsGenre.id != null and amsGenre.id != ''">
+				AND ( b.id =  #{amsGenre.id}
+			</if>
+			<if test="amsGenre != null and amsGenre.id != null and amsGenre.id != ''">
+				OR b.`parent_ids`  LIKE concat('%',#{amsGenre.id},'%') )
+			</if>
+			<if test="fileName != null and fileName != ''">
+				AND a.file_name LIKE  concat('%',#{fileName},'%')
+			</if>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsArchiveRules">
+		SELECT 
+			<include refid="amsArchiveRulesColumns"/>
+		FROM ams_archive_rules a
+		<include refid="amsArchiveRulesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getLastSort" resultType="java.lang.Integer">
+		SELECT max(a.sort) FROM ams_archive_rules a
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_archive_rules(
+			id,
+			ams_genre_id,
+			ams_user_dict_id,
+			file_name,
+			create_unit,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{amsGenre.id},
+			#{amsUserDict.id},
+			#{fileName},
+			#{createUnit},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_archive_rules SET 	
+			ams_genre_id = #{amsGenre.id},
+			ams_user_dict_id = #{amsUserDict.id},
+			file_name = #{fileName},
+			create_unit = #{createUnit},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_archive_rules SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateSort" >
+		UPDATE `ams_archive_rules` AS ruleA 
+		JOIN `ams_archive_rules` AS ruleB ON (ruleA.id=#{thisId} 
+		AND ruleB.id = #{changeId})
+		OR(ruleA.id = #{thisId} AND ruleB.id=#{changeId})
+		SET ruleA.sort = ruleB.sort,ruleB.sort=ruleA.sort;
+	</update>
+	
+</mapper>

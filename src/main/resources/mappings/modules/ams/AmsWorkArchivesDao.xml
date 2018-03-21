@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsWorkArchivesDao">
+    
+	<sql id="amsWorkArchivesColumns">
+		a.id AS "id",
+		a.archives_code AS "archivesCode",
+		a.warehouse_id AS "warehouseId",
+		a.cell AS "cell",
+		a.cabinet AS "cabinet",
+		a.layer AS "layer",
+		a.archives_name AS "archivesName",
+		a.make_unit AS "makeUnit",
+		a.carrier_type AS "carrierType",
+		a.files_count AS "filesCount",
+		a.start_date AS "startDate",
+		a.end_date AS "endDate",
+		a.make_date AS "makeDate",
+		a.year AS "year",
+		a.storage_period AS "storagePeriod",
+		a.degree_secrets AS "degreeSecrets",
+		a.main_title AS "mainTitle",
+		a.archives_explain AS "archivesExplain",
+		a.archives_json AS "archivesJson",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.exten1 AS "exten1",
+		a.exten2 AS "exten2",
+		a.exten3 AS "exten3",
+		a.exten4 AS "exten4",
+		a.exten5 AS "exten5"
+	</sql>
+	
+	<sql id="amsWorkArchivesJoins">
+	</sql>
+	
+	<sql id="amsWorkArchivesFilesJoins">
+		left JOIN (select id,group_id, file_name from ams_work_archives_files  where del_flag = 0 ) f ON f.group_id = a.id
+	</sql>
+    
+	<select id="get" resultType="AmsWorkArchives">
+		SELECT 
+			<include refid="amsWorkArchivesColumns"/>
+		FROM ams_work_archives a
+		<include refid="amsWorkArchivesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getByParam" resultType="AmsWorkArchives">
+		SELECT 
+			<include refid="amsWorkArchivesColumns"/>
+		FROM ams_work_archives a
+		<include refid="amsWorkArchivesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="makeUnit != null and makeUnit != ''">
+			AND a.make_Unit =#{makeUnit}
+			</if>
+			<if test="exten1 != null and exten1 != ''">
+			AND a.exten1 =#{exten1}
+			</if>
+			<if test="year != null and year != ''">
+			AND a.year =#{year}
+			</if>
+			<if test="archivesName != null and archivesName != ''">
+			AND a.archives_name =#{archivesName}
+			</if>
+		</where>
+	</select>
+	
+	<select id="findList" resultType="AmsWorkArchives">
+		SELECT 
+			<include refid="amsWorkArchivesColumns"/>
+		FROM ams_work_archives a
+		<include refid="amsWorkArchivesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="makeUnit != null and makeUnit != ''">
+				AND a.make_Unit LIKE  
+				<if test="dbName == 'oracle'">'%,'||#{makeUnit}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{makeUnit}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{makeUnit},'%')</if>
+			</if>
+			<if test="startDate != null and endDate != null and startDate != '' and endDate != ''">
+				AND a.make_date BETWEEN #{startDate} AND #{endDate}
+			</if>
+			<if test="exten1 != null and exten1 != ''">
+				AND a.exten1 LIKE  
+				<if test="dbName == 'oracle'">'%,'||#{exten1}||',%')</if>
+				<if test="dbName == 'mssql'">'%,'+#{exten1}+',%')</if>
+				<if test="dbName == 'mysql'">CONCAT('%',#{exten1},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AmsWorkArchives">
+		SELECT 
+			<include refid="amsWorkArchivesColumns"/>
+		FROM ams_work_archives a
+		<include refid="amsWorkArchivesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllArchivesFilesList" resultType="AmsWorkArchives">
+		SELECT 
+			<include refid="amsWorkArchivesColumns"/>
+			,f.id AS "AmsWorkArchivesFiles.id",
+			f.file_name AS "AmsWorkArchivesFiles.fileName"
+		FROM ams_work_archives a
+		<include refid="amsWorkArchivesFilesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ams_work_archives(
+			id,
+			archives_code,
+			warehouse_id,
+			cell,
+			cabinet,
+			layer,
+			archives_name,
+			make_unit,
+			carrier_type,
+			files_count,
+			start_date,
+			end_date,
+			make_date,
+			year,
+			storage_period,
+			degree_secrets,
+			main_title,
+			archives_explain,
+			archives_json,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			exten1,
+			exten2,
+			exten3,
+			exten4,
+			exten5
+		) VALUES (
+			#{id},
+			#{archivesCode},
+			#{warehouseId},
+			#{cell},
+			#{cabinet},
+			#{layer},
+			#{archivesName},
+			#{makeUnit},
+			#{carrierType},
+			#{filesCount},
+			#{startDate},
+			#{endDate},
+			#{makeDate},
+			#{year},
+			#{storagePeriod},
+			#{degreeSecrets},
+			#{mainTitle},
+			#{archivesExplain},
+			#{archivesJson},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{exten1},
+			#{exten2},
+			#{exten3},
+			#{exten4},
+			#{exten5}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_work_archives SET 	
+			archives_code = #{archivesCode},
+			warehouse_id = #{warehouseId},
+			cell = #{cell},
+			cabinet = #{cabinet},
+			layer = #{layer},
+			archives_name = #{archivesName},
+			make_unit = #{makeUnit},
+			carrier_type = #{carrierType},
+			files_count = #{filesCount},
+			start_date = #{startDate},
+			end_date = #{endDate},
+			make_date = #{makeDate},
+			year = #{year},
+			storage_period = #{storagePeriod},
+			degree_secrets = #{degreeSecrets},
+			main_title = #{mainTitle},
+			archives_explain = #{archivesExplain},
+			archives_json = #{archivesJson},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			exten1 = #{exten1},
+			exten2 = #{exten2},
+			exten3 = #{exten3},
+			exten4 = #{exten4},
+			exten5 = #{exten5}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_work_archives SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

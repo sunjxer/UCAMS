@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucams.modules.ams.dao.AmsDesExtendDao">
+    
+	<sql id="amsDesExtendColumns">
+		a.id AS "id",
+		a.ams_des_program_id AS "amsDesProgram.id",
+		a.name AS "name",
+		a.comments AS "comments",
+		a.column_type AS "columnType",
+		a.column_Length AS "columnLength",
+		a.show_type AS "showType",
+		a.is_null AS "isNull",
+		a.dict_type AS "dictType",
+		a.settings AS "settings",
+		a.sort AS "sort",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="amsDesExtendJoins">
+		LEFT JOIN ams_des_program b ON b.id = a.ams_des_program_id
+	</sql>
+    
+	<select id="get" resultType="amsDesExtend">
+		SELECT 
+			<include refid="amsDesExtendColumns"/>
+		FROM ams_des_extend a
+		<include refid="amsDesExtendJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="amsDesExtend">
+		SELECT 
+			<include refid="amsDesExtendColumns"/>
+		FROM ams_des_extend a
+		<include refid="amsDesExtendJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="amsDesProgram !=null and amsDesProgram.id != null and amsDesProgram.id != ''">
+				AND a.ams_des_program_id = #{amsDesProgram.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.sort ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="amsDesExtend">
+		SELECT 
+			<include refid="amsDesExtendColumns"/>
+		FROM ams_des_extend a
+		<include refid="amsDesExtendJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findByUpType" resultType="amsDesExtend">
+			SELECT 
+			ex.id AS 'id', 
+			ex.ams_des_program_id AS 'amsDesProgram.id',
+			ex.name AS 'name', 
+			ex.comments AS 'comments',
+			ex.show_type AS 'showType',
+			ex.is_null AS 'isNull',
+			ex.dict_type AS 'dictType',
+			pro.unit_project_type AS 'amsDesProgram.unitProjectType',
+			pro.name AS 'amsDesProgram.name',
+			pro.program_type AS 'amsDesProgram.programType'
+			 FROM ams_des_extend ex
+			INNER JOIN ams_des_program pro ON pro.id = ex.ams_des_program_id
+			WHERE 
+			pro.del_flag = #{DEL_FLAG_NORMAL}
+			AND pro.useable = #{amsDesProgram.useable}
+			<if test="amsDesProgram != null and amsDesProgram.unitProjectType != null and amsDesProgram.unitProjectType != ''">
+			AND pro.unit_project_type = #{amsDesProgram.unitProjectType}
+			</if>
+			AND pro.`program_type` = #{amsDesProgram.programType}
+	</select>
+	
+	
+	<insert id="insert">
+		INSERT INTO ams_des_extend(
+			id,
+			ams_des_program_id,
+			name,
+			comments,
+			column_type,
+			column_Length,
+			show_type,
+			is_null,
+			dict_type,
+			settings,
+			sort,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{amsDesProgram.id},
+			#{name},
+			#{comments},
+			#{columnType},
+			#{columnLength},
+			#{showType},
+			#{isNull},
+			#{dictType},
+			#{settings},
+			#{sort},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ams_des_extend SET 	
+			ams_des_program_id = #{amsDesProgram.id},
+			name = #{name},
+			comments = #{comments},
+			column_type = #{columnType},
+			column_length = #{columnLength},
+			show_type = #{showType},
+			is_null = #{isNull},
+			dict_type = #{dictType},
+			settings = #{settings},
+			sort = #{sort},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE ams_des_extend SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE ams_des_program_id = #{amsDesProgram.id}
+			</otherwise>
+		</choose>
+	</update>
+	<select id="findExtendDataList" resultType="amsDesExtend">
+		SELECT 
+			<include refid="amsDesExtendColumns"/>
+		FROM ams_des_extend a
+		<include refid="amsDesExtendJoins"/>
+		<where>
+			1=1
+			<!-- <if test="DEL_FLAG_NORMAL !=null and  DEL_FLAG_NORMAL != ''"> -->
+			and a.del_flag = #{DEL_FLAG_NORMAL}
+			<!-- </if> -->
+			
+			AND b.useable = 1 
+			<if test="amsDesProgram !=null and amsDesProgram.programType !=null and amsDesProgram.programType != ''">
+				AND b.program_type = #{amsDesProgram.programType}
+			</if>
+			<if test="amsDesProgram !=null and amsDesProgram.unitProjectType !=null and amsDesProgram.unitProjectType != ''">
+				AND b.unit_project_type = #{amsDesProgram.unitProjectType}
+			</if>
+			<if test="amsDesProgram !=null and amsDesProgram.id != null and amsDesProgram.id != ''">
+				AND a.ams_des_program_id = #{amsDesProgram.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.sort ASC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>
